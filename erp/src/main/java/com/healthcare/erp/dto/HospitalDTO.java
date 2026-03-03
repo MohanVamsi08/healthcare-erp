@@ -11,7 +11,7 @@ public record HospitalDTO(
         String gstin,
         String stateCode,
         String address,
-        boolean isActive,
+        Boolean isActive,
         LocalDateTime createdAt) {
     public static HospitalDTO fromEntity(Hospital hospital) {
         return new HospitalDTO(
@@ -30,7 +30,7 @@ public record HospitalDTO(
                 .gstin(this.gstin)
                 .stateCode(this.stateCode)
                 .address(this.address)
-                .isActive(this.isActive)
+                .isActive(this.isActive != null ? this.isActive : true)
                 .build();
     }
 }
