@@ -18,7 +18,7 @@ public class MedicalRecordController {
     private final MedicalRecordService medicalRecordService;
 
     @PostMapping("/api/hospitals/{hospitalId}/medical-records")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DOCTOR') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<MedicalRecordDTO> create(
             @PathVariable UUID hospitalId,
             @RequestBody MedicalRecordDTO dto) {
@@ -26,7 +26,7 @@ public class MedicalRecordController {
     }
 
     @GetMapping("/api/hospitals/{hospitalId}/patients/{patientId}/medical-records")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'NURSE')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'NURSE') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<MedicalRecordDTO>> getByPatient(
             @PathVariable UUID hospitalId,
             @PathVariable UUID patientId) {
@@ -34,7 +34,7 @@ public class MedicalRecordController {
     }
 
     @GetMapping("/api/hospitals/{hospitalId}/medical-records/{recordId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DOCTOR', 'NURSE')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DOCTOR', 'NURSE') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<MedicalRecordDTO> getById(
             @PathVariable UUID hospitalId,
             @PathVariable UUID recordId) {
@@ -42,7 +42,7 @@ public class MedicalRecordController {
     }
 
     @PutMapping("/api/hospitals/{hospitalId}/medical-records/{recordId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'DOCTOR') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<MedicalRecordDTO> update(
             @PathVariable UUID hospitalId,
             @PathVariable UUID recordId,

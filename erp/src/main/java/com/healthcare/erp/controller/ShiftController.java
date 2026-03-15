@@ -20,7 +20,7 @@ public class ShiftController {
     private final ShiftService shiftService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<ShiftDTO>> getByDate(
             @PathVariable UUID hospitalId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -28,7 +28,7 @@ public class ShiftController {
     }
 
     @GetMapping("/staff/{staffId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'NURSE', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'NURSE', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<ShiftDTO>> getByStaff(
             @PathVariable UUID hospitalId,
             @PathVariable UUID staffId,
@@ -38,14 +38,14 @@ public class ShiftController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<ShiftDTO> create(@PathVariable UUID hospitalId,
                                             @RequestBody ShiftDTO dto) {
         return ResponseEntity.ok(shiftService.create(hospitalId, dto));
     }
 
     @PutMapping("/{shiftId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<ShiftDTO> update(@PathVariable UUID hospitalId,
                                             @PathVariable UUID shiftId,
                                             @RequestBody ShiftDTO dto) {

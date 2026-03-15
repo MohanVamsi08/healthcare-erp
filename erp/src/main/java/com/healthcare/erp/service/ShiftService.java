@@ -39,6 +39,9 @@ public class ShiftService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hospital", hospitalId));
         Staff staff = staffRepository.findById(dto.staffId())
                 .orElseThrow(() -> new ResourceNotFoundException("Staff", dto.staffId()));
+        if (!staff.getHospital().getId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Staff does not belong to this hospital");
+        }
 
         Shift shift = Shift.builder()
                 .staff(staff)

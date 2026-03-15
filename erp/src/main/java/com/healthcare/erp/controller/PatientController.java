@@ -5,28 +5,33 @@ import com.healthcare.erp.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/api/hospitals/{hospitalId}/patients")
 @RequiredArgsConstructor
 public class PatientController {
 
     private final PatientService patientService;
 
-    @GetMapping("/api/hospitals/{hospitalId}/patients")
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<PatientDTO>> getPatientsByHospital(@PathVariable UUID hospitalId) {
         return ResponseEntity.ok(patientService.getByHospitalId(hospitalId));
     }
 
-    @GetMapping("/api/patients/{id}")
-    public ResponseEntity<PatientDTO> getPatientById(@PathVariable UUID id) {
-        return ResponseEntity.ok(patientService.getById(id));
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
+    public ResponseEntity<PatientDTO> getPatientById(@PathVariable UUID hospitalId, @PathVariable UUID id) {
+        return ResponseEntity.ok(patientService.getById(hospitalId, id));
     }
 
-    @PostMapping("/api/hospitals/{hospitalId}/patients")
+    @PostMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<PatientDTO> createPatient(
             @PathVariable UUID hospitalId,
             @RequestBody PatientDTO dto) {
@@ -34,16 +39,19 @@ public class PatientController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PutMapping("/api/patients/{id}")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<PatientDTO> updatePatient(
+            @PathVariable UUID hospitalId,
             @PathVariable UUID id,
             @RequestBody PatientDTO dto) {
-        return ResponseEntity.ok(patientService.update(id, dto));
+        return ResponseEntity.ok(patientService.update(hospitalId, id, dto));
     }
 
-    @DeleteMapping("/api/patients/{id}")
-    public ResponseEntity<Void> deletePatient(@PathVariable UUID id) {
-        patientService.delete(id);
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
+    public ResponseEntity<Void> deletePatient(@PathVariable UUID hospitalId, @PathVariable UUID id) {
+        patientService.delete(hospitalId, id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -31,9 +31,12 @@ public class DepartmentService {
                 .toList();
     }
 
-    public DepartmentDTO getById(UUID id) {
+    public DepartmentDTO getById(UUID hospitalId, UUID id) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", id));
+        if (!department.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Department", id);
+        }
         return DepartmentDTO.fromEntity(department);
     }
 
@@ -52,9 +55,12 @@ public class DepartmentService {
         return DepartmentDTO.fromEntity(saved);
     }
 
-    public DepartmentDTO update(UUID id, DepartmentDTO dto) {
+    public DepartmentDTO update(UUID hospitalId, UUID id, DepartmentDTO dto) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", id));
+        if (!department.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Department", id);
+        }
 
         department.setName(dto.name());
         department.setCode(dto.code());
@@ -64,8 +70,10 @@ public class DepartmentService {
         return DepartmentDTO.fromEntity(updated);
     }
 
-    public void delete(UUID id) {
-        if (!departmentRepository.existsById(id)) {
+    public void delete(UUID hospitalId, UUID id) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department", id));
+        if (!department.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("Department", id);
         }
         departmentRepository.deleteById(id);

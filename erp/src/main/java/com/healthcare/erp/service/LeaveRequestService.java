@@ -40,6 +40,9 @@ public class LeaveRequestService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hospital", hospitalId));
         Staff staff = staffRepository.findById(dto.staffId())
                 .orElseThrow(() -> new ResourceNotFoundException("Staff", dto.staffId()));
+        if (!staff.getHospital().getId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Staff does not belong to this hospital");
+        }
 
         if (dto.endDate().isBefore(dto.startDate())) {
             throw new IllegalArgumentException("End date cannot be before start date");
@@ -57,9 +60,12 @@ public class LeaveRequestService {
         return LeaveRequestDTO.fromEntity(leaveRequestRepository.save(lr));
     }
 
-    public LeaveRequestDTO approve(UUID id, UUID approvedByUserId) {
+    public LeaveRequestDTO approve(UUID hospitalId, UUID id, UUID approvedByUserId) {
         LeaveRequest lr = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("LeaveRequest", id));
+        if (!lr.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("LeaveRequest", id);
+        }
 
         if (lr.getStatus() != LeaveStatus.PENDING) {
             throw new IllegalArgumentException("Leave request is not in PENDING status");
@@ -75,9 +81,12 @@ public class LeaveRequestService {
         return LeaveRequestDTO.fromEntity(leaveRequestRepository.save(lr));
     }
 
-    public LeaveRequestDTO reject(UUID id) {
+    public LeaveRequestDTO reject(UUID hospitalId, UUID id) {
         LeaveRequest lr = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("LeaveRequest", id));
+        if (!lr.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("LeaveRequest", id);
+        }
 
         if (lr.getStatus() != LeaveStatus.PENDING) {
             throw new IllegalArgumentException("Leave request is not in PENDING status");

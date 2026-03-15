@@ -47,13 +47,13 @@ public class LeaveRequestController {
                                                     @AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow().getId();
-        return ResponseEntity.ok(leaveRequestService.approve(leaveId, userId));
+        return ResponseEntity.ok(leaveRequestService.approve(hospitalId, leaveId, userId));
     }
 
     @PatchMapping("/{leaveId}/reject")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
     public ResponseEntity<LeaveRequestDTO> reject(@PathVariable UUID hospitalId,
                                                    @PathVariable UUID leaveId) {
-        return ResponseEntity.ok(leaveRequestService.reject(leaveId));
+        return ResponseEntity.ok(leaveRequestService.reject(hospitalId, leaveId));
     }
 }

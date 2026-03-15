@@ -52,6 +52,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+
+        // QA FIX: If authentication was successful, reset the counter for this IP
+        if (response.getStatus() == HttpServletResponse.SC_OK) {
+            info.count.set(0);
+        }
     }
 
     private String getClientIp(HttpServletRequest request) {

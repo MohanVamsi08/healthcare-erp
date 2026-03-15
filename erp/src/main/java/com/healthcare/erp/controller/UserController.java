@@ -33,7 +33,7 @@ public class UserController {
      * HOSPITAL_ADMIN creates staff users for their hospital.
      */
     @PostMapping("/api/hospitals/{hospitalId}/users")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<UserDTO> createStaffUser(
             @PathVariable UUID hospitalId,
             @Valid @RequestBody CreateUserRequest request) {
@@ -45,7 +45,7 @@ public class UserController {
      * List all active users in a hospital.
      */
     @GetMapping("/api/hospitals/{hospitalId}/users")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<UserDTO>> getUsersByHospital(@PathVariable UUID hospitalId) {
         return ResponseEntity.ok(userService.getUsersByHospital(hospitalId));
     }
@@ -54,7 +54,7 @@ public class UserController {
      * Get a specific user in a hospital.
      */
     @GetMapping("/api/hospitals/{hospitalId}/users/{userId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<UserDTO> getUser(
             @PathVariable UUID hospitalId,
             @PathVariable UUID userId) {
@@ -65,7 +65,7 @@ public class UserController {
      * Update a staff user.
      */
     @PutMapping("/api/hospitals/{hospitalId}/users/{userId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable UUID hospitalId,
             @PathVariable UUID userId,
@@ -77,7 +77,7 @@ public class UserController {
      * Deactivate a staff user (soft delete).
      */
     @DeleteMapping("/api/hospitals/{hospitalId}/users/{userId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<Void> deactivateUser(
             @PathVariable UUID hospitalId,
             @PathVariable UUID userId) {

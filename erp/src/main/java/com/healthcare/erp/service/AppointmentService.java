@@ -26,8 +26,15 @@ public class AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hospital", hospitalId));
         Patient patient = patientRepository.findById(dto.patientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", dto.patientId()));
+        if (!patient.getHospital().getId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Patient does not belong to this hospital");
+        }
+
         Doctor doctor = doctorRepository.findById(dto.doctorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor", dto.doctorId()));
+        if (!doctor.getHospital().getId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Doctor does not belong to this hospital");
+        }
 
         Appointment appointment = Appointment.builder()
                 .patient(patient)

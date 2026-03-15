@@ -21,7 +21,7 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST', 'DOCTOR') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<AppointmentDTO> create(
             @PathVariable UUID hospitalId,
             @RequestBody AppointmentDTO dto) {
@@ -29,12 +29,13 @@ public class AppointmentController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<AppointmentDTO>> getAll(@PathVariable UUID hospitalId) {
         return ResponseEntity.ok(appointmentService.getByHospital(hospitalId));
     }
 
     @GetMapping("/{appointmentId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<AppointmentDTO> getById(
             @PathVariable UUID hospitalId,
             @PathVariable UUID appointmentId) {
@@ -42,7 +43,7 @@ public class AppointmentController {
     }
 
     @PutMapping("/{appointmentId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<AppointmentDTO> update(
             @PathVariable UUID hospitalId,
             @PathVariable UUID appointmentId,
@@ -51,7 +52,7 @@ public class AppointmentController {
     }
 
     @PatchMapping("/{appointmentId}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<AppointmentDTO> updateStatus(
             @PathVariable UUID hospitalId,
             @PathVariable UUID appointmentId,

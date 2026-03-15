@@ -19,7 +19,7 @@ public class DoctorController {
     private final DoctorService doctorService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<DoctorDTO> create(
             @PathVariable UUID hospitalId,
             @RequestBody DoctorDTO dto) {
@@ -27,11 +27,13 @@ public class DoctorController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated() and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<DoctorDTO>> getAll(@PathVariable UUID hospitalId) {
         return ResponseEntity.ok(doctorService.getByHospital(hospitalId));
     }
 
     @GetMapping("/{doctorId}")
+    @PreAuthorize("isAuthenticated() and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<DoctorDTO> getById(
             @PathVariable UUID hospitalId,
             @PathVariable UUID doctorId) {
@@ -39,7 +41,7 @@ public class DoctorController {
     }
 
     @PutMapping("/{doctorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<DoctorDTO> update(
             @PathVariable UUID hospitalId,
             @PathVariable UUID doctorId,
@@ -48,7 +50,7 @@ public class DoctorController {
     }
 
     @DeleteMapping("/{doctorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<Void> deactivate(
             @PathVariable UUID hospitalId,
             @PathVariable UUID doctorId) {

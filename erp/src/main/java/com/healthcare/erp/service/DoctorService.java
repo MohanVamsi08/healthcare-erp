@@ -42,6 +42,9 @@ public class DoctorService {
         if (dto.departmentId() != null) {
             Department dept = departmentRepository.findById(dto.departmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Department", dto.departmentId()));
+            if (!dept.getHospital().getId().equals(hospitalId)) {
+                throw new IllegalArgumentException("Department does not belong to this hospital");
+            }
             doctor.setDepartment(dept);
         }
 
@@ -89,6 +92,9 @@ public class DoctorService {
         if (dto.departmentId() != null) {
             Department dept = departmentRepository.findById(dto.departmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Department", dto.departmentId()));
+            if (!dept.getHospital().getId().equals(hospitalId)) {
+                throw new IllegalArgumentException("Department does not belong to this hospital");
+            }
             doctor.setDepartment(dept);
         }
 

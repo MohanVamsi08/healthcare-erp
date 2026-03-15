@@ -31,9 +31,12 @@ public class PatientService {
                 .toList();
     }
 
-    public PatientDTO getById(UUID id) {
+    public PatientDTO getById(UUID hospitalId, UUID id) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", id));
+        if (!patient.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Patient", id);
+        }
         return PatientDTO.fromEntity(patient);
     }
 
@@ -58,9 +61,12 @@ public class PatientService {
         return PatientDTO.fromEntity(saved);
     }
 
-    public PatientDTO update(UUID id, PatientDTO dto) {
+    public PatientDTO update(UUID hospitalId, UUID id, PatientDTO dto) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", id));
+        if (!patient.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Patient", id);
+        }
 
         patient.setFirstName(dto.firstName());
         patient.setLastName(dto.lastName());
@@ -76,8 +82,10 @@ public class PatientService {
         return PatientDTO.fromEntity(updated);
     }
 
-    public void delete(UUID id) {
-        if (!patientRepository.existsById(id)) {
+    public void delete(UUID hospitalId, UUID id) {
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", id));
+        if (!patient.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("Patient", id);
         }
         patientRepository.deleteById(id);

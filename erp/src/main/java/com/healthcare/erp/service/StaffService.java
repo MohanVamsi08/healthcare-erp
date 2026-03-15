@@ -29,9 +29,13 @@ public class StaffService {
                 .stream().map(StaffDTO::fromEntity).toList();
     }
 
-    public StaffDTO getById(UUID id) {
-        return StaffDTO.fromEntity(staffRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff", id)));
+    public StaffDTO getById(UUID hospitalId, UUID id) {
+        Staff staff = staffRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Staff", id));
+        if (!staff.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Staff", id);
+        }
+        return StaffDTO.fromEntity(staff);
     }
 
     public StaffDTO create(UUID hospitalId, StaffDTO dto) {
@@ -58,21 +62,30 @@ public class StaffService {
         if (dto.departmentId() != null) {
             Department dept = departmentRepository.findById(dto.departmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Department", dto.departmentId()));
+            if (!dept.getHospital().getId().equals(hospitalId)) {
+                throw new IllegalArgumentException("Department does not belong to this hospital");
+            }
             staff.setDepartment(dept);
         }
 
         if (dto.userId() != null) {
             User user = userRepository.findById(dto.userId())
                     .orElseThrow(() -> new ResourceNotFoundException("User", dto.userId()));
+            if (!user.getHospital().getId().equals(hospitalId)) {
+                throw new IllegalArgumentException("User does not belong to this hospital");
+            }
             staff.setUser(user);
         }
 
         return StaffDTO.fromEntity(staffRepository.save(staff));
     }
 
-    public StaffDTO update(UUID id, StaffDTO dto) {
+    public StaffDTO update(UUID hospitalId, UUID id, StaffDTO dto) {
         Staff staff = staffRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Staff", id));
+        if (!staff.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Staff", id);
+        }
 
         staff.setFirstName(dto.firstName());
         staff.setLastName(dto.lastName());
@@ -85,9 +98,12 @@ public class StaffService {
         return StaffDTO.fromEntity(staffRepository.save(staff));
     }
 
-    public void deactivate(UUID id) {
+    public void deactivate(UUID hospitalId, UUID id) {
         Staff staff = staffRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Staff", id));
+        if (!staff.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Staff", id);
+        }
         staff.setActive(false);
         staffRepository.save(staff);
     }
