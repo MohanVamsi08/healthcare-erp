@@ -51,7 +51,7 @@ public class PatientService {
                 .aadhaarNumber(dto.aadhaarNumber())
                 .bloodGroup(dto.bloodGroup())
                 .hospital(hospital)
-                .isActive(dto.isActive())
+                .isActive(dto.isActive() != null ? dto.isActive() : true)
                 .build();
 
         Patient saved = patientRepository.save(patient);
@@ -70,7 +70,7 @@ public class PatientService {
         patient.setEmail(dto.email());
         patient.setAadhaarNumber(dto.aadhaarNumber());
         patient.setBloodGroup(dto.bloodGroup());
-        patient.setActive(dto.isActive());
+        if (dto.isActive() != null) patient.setActive(dto.isActive());
 
         Patient updated = patientRepository.save(patient);
         return PatientDTO.fromEntity(updated);

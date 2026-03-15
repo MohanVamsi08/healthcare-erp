@@ -10,7 +10,7 @@ public record DepartmentDTO(
         String name,
         String code,
         UUID hospitalId,
-        boolean isActive,
+        Boolean isActive,
         LocalDateTime createdAt) {
     public static DepartmentDTO fromEntity(Department department) {
         return new DepartmentDTO(

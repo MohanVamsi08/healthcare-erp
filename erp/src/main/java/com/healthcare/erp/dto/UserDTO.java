@@ -13,7 +13,7 @@ public record UserDTO(
         String lastName,
         Role role,
         UUID hospitalId,
-        boolean isActive,
+        Boolean isActive,
         LocalDateTime createdAt) {
 
     public static UserDTO fromEntity(User user) {

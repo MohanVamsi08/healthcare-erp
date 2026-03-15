@@ -17,7 +17,7 @@ public record PatientDTO(
         String aadhaarNumber,
         String bloodGroup,
         UUID hospitalId,
-        boolean isActive,
+        Boolean isActive,
         LocalDateTime createdAt) {
     public static PatientDTO fromEntity(Patient patient) {
         return new PatientDTO(
