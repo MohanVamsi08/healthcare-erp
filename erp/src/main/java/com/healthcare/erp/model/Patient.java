@@ -1,5 +1,6 @@
 package com.healthcare.erp.model;
 
+import com.healthcare.erp.security.FieldEncryptor;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
@@ -36,7 +37,8 @@ public class Patient {
 
     private String email;
 
-    @Column(name = "aadhaar_number", length = 12, unique = true)
+    @Convert(converter = FieldEncryptor.class)
+    @Column(name = "aadhaar_number", length = 255, unique = true)
     private String aadhaarNumber;
 
     @Column(name = "blood_group", length = 5)

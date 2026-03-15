@@ -1,5 +1,6 @@
 package com.healthcare.erp.model;
 
+import com.healthcare.erp.security.FieldEncryptor;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
@@ -34,9 +35,11 @@ public class MedicalRecord {
     @JoinColumn(name = "hospital_id", nullable = false)
     private Hospital hospital;
 
+    @Convert(converter = FieldEncryptor.class)
     @Column(columnDefinition = "TEXT")
     private String diagnosis;
 
+    @Convert(converter = FieldEncryptor.class)
     @Column(columnDefinition = "TEXT")
     private String prescription;
 
