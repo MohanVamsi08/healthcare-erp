@@ -6,6 +6,7 @@ import com.healthcare.erp.model.Hospital;
 import com.healthcare.erp.model.Patient;
 import com.healthcare.erp.repository.HospitalRepository;
 import com.healthcare.erp.repository.PatientRepository;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class PatientService {
 
     private final PatientRepository patientRepository;
     private final HospitalRepository hospitalRepository;
+    private final AuditService auditService;
 
     public List<PatientDTO> getByHospitalId(UUID hospitalId) {
         if (!hospitalRepository.existsById(hospitalId)) {
@@ -37,6 +39,7 @@ public class PatientService {
         if (!patient.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("Patient", id);
         }
+        auditService.logRead("Patient", id.toString(), hospitalId, null);
         return PatientDTO.fromEntity(patient);
     }
 
@@ -58,6 +61,7 @@ public class PatientService {
                 .build();
 
         Patient saved = patientRepository.save(patient);
+        auditService.logCreate("Patient", saved.getId().toString(), hospitalId, null);
         return PatientDTO.fromEntity(saved);
     }
 
@@ -79,6 +83,7 @@ public class PatientService {
         if (dto.isActive() != null) patient.setActive(dto.isActive());
 
         Patient updated = patientRepository.save(patient);
+        auditService.logUpdate("Patient", id.toString(), hospitalId, null);
         return PatientDTO.fromEntity(updated);
     }
 
@@ -88,6 +93,7 @@ public class PatientService {
         if (!patient.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("Patient", id);
         }
+        auditService.logDelete("Patient", id.toString(), hospitalId, null);
         patientRepository.deleteById(id);
     }
 }

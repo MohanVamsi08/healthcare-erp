@@ -4,6 +4,7 @@ import com.healthcare.erp.dto.MedicalRecordDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class MedicalRecordService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AuditService auditService;
 
     public MedicalRecordDTO create(UUID hospitalId, MedicalRecordDTO dto) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
@@ -56,7 +58,9 @@ public class MedicalRecordService {
             record.setAppointment(appt);
         }
 
-        return MedicalRecordDTO.fromEntity(medicalRecordRepository.save(record));
+        MedicalRecord saved = medicalRecordRepository.save(record);
+        auditService.logCreate("MedicalRecord", saved.getId().toString(), hospitalId, null);
+        return MedicalRecordDTO.fromEntity(saved);
     }
 
     @Transactional(readOnly = true)
@@ -75,6 +79,7 @@ public class MedicalRecordService {
         if (!record.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("MedicalRecord", recordId);
         }
+        auditService.logRead("MedicalRecord", recordId.toString(), hospitalId, null);
         return MedicalRecordDTO.fromEntity(record);
     }
 
@@ -91,6 +96,8 @@ public class MedicalRecordService {
         if (dto.testResults() != null) record.setTestResults(dto.testResults());
         record.setUpdatedAt(java.time.LocalDateTime.now());
 
-        return MedicalRecordDTO.fromEntity(medicalRecordRepository.save(record));
+        MedicalRecord saved = medicalRecordRepository.save(record);
+        auditService.logUpdate("MedicalRecord", recordId.toString(), hospitalId, null);
+        return MedicalRecordDTO.fromEntity(saved);
     }
 }

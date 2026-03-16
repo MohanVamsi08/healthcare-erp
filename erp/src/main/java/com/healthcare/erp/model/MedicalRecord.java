@@ -43,9 +43,11 @@ public class MedicalRecord {
     @Column(columnDefinition = "TEXT")
     private String prescription;
 
+    @Convert(converter = FieldEncryptor.class)
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Convert(converter = FieldEncryptor.class)
     @Column(name = "test_results", columnDefinition = "TEXT")
     private String testResults;
 
