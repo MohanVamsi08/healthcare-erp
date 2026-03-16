@@ -27,6 +27,7 @@ public class PatientService {
         if (!hospitalRepository.existsById(hospitalId)) {
             throw new ResourceNotFoundException("Hospital", hospitalId);
         }
+        auditService.logRead("Patient", "LIST", hospitalId, null);
         return patientRepository.findByHospitalId(hospitalId)
                 .stream()
                 .map(PatientDTO::fromEntity)

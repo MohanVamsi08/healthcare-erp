@@ -68,6 +68,7 @@ public class MedicalRecordService {
         if (!hospitalRepository.existsById(hospitalId)) {
             throw new ResourceNotFoundException("Hospital", hospitalId);
         }
+        auditService.logRead("MedicalRecord", "LIST:patient=" + patientId, hospitalId, null);
         return medicalRecordRepository.findByPatientIdAndHospitalId(patientId, hospitalId)
                 .stream().map(MedicalRecordDTO::fromEntity).toList();
     }

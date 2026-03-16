@@ -19,13 +19,13 @@ public class HospitalController {
     private final HospitalService hospitalService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<HospitalDTO>> getAllHospitals() {
         return ResponseEntity.ok(hospitalService.getAllHospitals());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @tenantGuard.canAccessTenant(authentication, #id)")
     public ResponseEntity<HospitalDTO> getHospitalById(@PathVariable UUID id) {
         return ResponseEntity.ok(hospitalService.getById(id));
     }
