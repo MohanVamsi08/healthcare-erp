@@ -22,26 +22,26 @@ public class LeaveRequestController {
     private final UserRepository userRepository;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<LeaveRequestDTO>> getAll(@PathVariable UUID hospitalId) {
         return ResponseEntity.ok(leaveRequestService.getByHospitalId(hospitalId));
     }
 
     @GetMapping("/pending")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<LeaveRequestDTO>> getPending(@PathVariable UUID hospitalId) {
         return ResponseEntity.ok(leaveRequestService.getPending(hospitalId));
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<LeaveRequestDTO> create(@PathVariable UUID hospitalId,
                                                    @RequestBody LeaveRequestDTO dto) {
         return ResponseEntity.ok(leaveRequestService.create(hospitalId, dto));
     }
 
     @PatchMapping("/{leaveId}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<LeaveRequestDTO> approve(@PathVariable UUID hospitalId,
                                                     @PathVariable UUID leaveId,
                                                     @AuthenticationPrincipal UserDetails userDetails) {
@@ -51,7 +51,7 @@ public class LeaveRequestController {
     }
 
     @PatchMapping("/{leaveId}/reject")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<LeaveRequestDTO> reject(@PathVariable UUID hospitalId,
                                                    @PathVariable UUID leaveId) {
         return ResponseEntity.ok(leaveRequestService.reject(hospitalId, leaveId));

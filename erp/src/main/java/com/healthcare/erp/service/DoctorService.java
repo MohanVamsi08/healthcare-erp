@@ -51,6 +51,9 @@ public class DoctorService {
         if (dto.userId() != null) {
             User user = userRepository.findById(dto.userId())
                     .orElseThrow(() -> new ResourceNotFoundException("User", dto.userId()));
+            if (!user.getHospital().getId().equals(hospitalId)) {
+                throw new IllegalArgumentException("User does not belong to this hospital");
+            }
             doctor.setUser(user);
         }
 

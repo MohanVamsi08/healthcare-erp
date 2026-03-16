@@ -49,6 +49,6 @@ public class ShiftController {
     public ResponseEntity<ShiftDTO> update(@PathVariable UUID hospitalId,
                                             @PathVariable UUID shiftId,
                                             @RequestBody ShiftDTO dto) {
-        return ResponseEntity.ok(shiftService.update(shiftId, dto));
+        return ResponseEntity.ok(shiftService.update(hospitalId, shiftId, dto));
     }
 }

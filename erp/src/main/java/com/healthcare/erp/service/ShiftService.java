@@ -30,6 +30,11 @@ public class ShiftService {
     }
 
     public List<ShiftDTO> getByStaff(UUID hospitalId, UUID staffId, LocalDate start, LocalDate end) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Staff", staffId));
+        if (!staff.getHospital().getId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Staff does not belong to this hospital");
+        }
         return shiftRepository.findByStaffIdAndShiftDateBetween(staffId, start, end)
                 .stream().map(ShiftDTO::fromEntity).toList();
     }
@@ -57,9 +62,12 @@ public class ShiftService {
         return ShiftDTO.fromEntity(shiftRepository.save(shift));
     }
 
-    public ShiftDTO update(UUID id, ShiftDTO dto) {
+    public ShiftDTO update(UUID hospitalId, UUID id, ShiftDTO dto) {
         Shift shift = shiftRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shift", id));
+        if (!shift.getHospital().getId().equals(hospitalId)) {
+            throw new ResourceNotFoundException("Shift", id);
+        }
 
         if (dto.shiftDate() != null) shift.setShiftDate(dto.shiftDate());
         if (dto.startTime() != null) shift.setStartTime(dto.startTime());
