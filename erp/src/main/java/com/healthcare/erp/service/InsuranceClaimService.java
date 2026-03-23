@@ -19,7 +19,6 @@ import java.util.UUID;
 public class InsuranceClaimService {
 
     private final InsuranceClaimRepository claimRepository;
-    private final InvoiceRepository invoiceRepository;
     private final PatientRepository patientRepository;
     private final HospitalRepository hospitalRepository;
     private final InvoiceService invoiceService;
@@ -54,6 +53,9 @@ public class InsuranceClaimService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", dto.patientId()));
         if (!patient.getHospital().getId().equals(hospitalId)) {
             throw new IllegalArgumentException("Patient does not belong to this hospital");
+        }
+        if (!invoice.getPatient().getId().equals(dto.patientId())) {
+            throw new IllegalArgumentException("Invoice does not belong to this patient");
         }
 
         // Generate claim number

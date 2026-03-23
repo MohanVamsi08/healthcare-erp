@@ -47,6 +47,22 @@ public class PaymentService {
             throw new IllegalArgumentException("Invoice is already fully PAID");
         }
 
+        // Validate payment amount
+        if (dto.amount() == null || dto.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Payment amount must be greater than zero");
+        }
+
+        // Prevent overpayment
+        List<Payment> existingPayments = paymentRepository.findByInvoiceId(invoiceId);
+        BigDecimal totalPaid = existingPayments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal remaining = invoice.getTotalAmount().subtract(totalPaid);
+        if (dto.amount().compareTo(remaining) > 0) {
+            throw new IllegalArgumentException("Payment amount (" + dto.amount()
+                    + ") exceeds remaining balance (" + remaining + ")");
+        }
+
         Payment payment = Payment.builder()
                 .invoice(invoice)
                 .hospital(hospital)

@@ -12,7 +12,8 @@ CREATE TABLE invoices (
     due_date DATE,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (hospital_id, invoice_number)
 );
 
 CREATE TABLE payments (

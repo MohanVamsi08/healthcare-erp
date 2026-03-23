@@ -88,6 +88,9 @@ public class InvoiceService {
             if (!appt.getHospital().getId().equals(hospitalId)) {
                 throw new IllegalArgumentException("Appointment does not belong to this hospital");
             }
+            if (!appt.getPatient().getId().equals(dto.patientId())) {
+                throw new IllegalArgumentException("Appointment does not belong to this patient");
+            }
             invoice.setAppointment(appt);
         }
 
