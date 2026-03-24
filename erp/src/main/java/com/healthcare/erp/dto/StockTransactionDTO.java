@@ -17,6 +17,7 @@ public record StockTransactionDTO(
         int quantityChange,
         UUID referenceId,
         String notes,
+        String performedBy,
         LocalDateTime createdAt
 ) {
     public static StockTransactionDTO fromEntity(StockTransaction t) {
@@ -27,6 +28,6 @@ public record StockTransactionDTO(
                 t.getSupply() != null ? t.getSupply().getName() : null,
                 t.getHospital().getId(), t.getTransactionType(),
                 t.getQuantityChange(), t.getReferenceId(),
-                t.getNotes(), t.getCreatedAt());
+                t.getNotes(), t.getPerformedBy(), t.getCreatedAt());
     }
 }

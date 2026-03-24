@@ -7,6 +7,8 @@ import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
 import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class PrescriptionService {
     private final HospitalRepository hospitalRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final UserRepository userRepository;
     private final MedicineService medicineService;
     private final MedicineRepository medicineRepository;
     private final StockTransactionRepository stockTransactionRepository;
@@ -48,10 +51,8 @@ public class PrescriptionService {
         if (!patient.getHospital().getId().equals(hospitalId))
             throw new IllegalArgumentException("Patient does not belong to this hospital");
 
-        Doctor doctor = doctorRepository.findById(dto.doctorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor", dto.doctorId()));
-        if (!doctor.getHospital().getId().equals(hospitalId))
-            throw new IllegalArgumentException("Doctor does not belong to this hospital");
+        // Resolve the doctor from the authenticated user context
+        Doctor doctor = resolveDoctor(hospitalId, dto.doctorId());
 
         if (dto.items() == null || dto.items().isEmpty())
             throw new IllegalArgumentException("At least one prescription item is required");
@@ -86,6 +87,8 @@ public class PrescriptionService {
         if (rx.getStatus() != PrescriptionStatus.PENDING)
             throw new IllegalArgumentException("Only PENDING prescriptions can be dispensed");
 
+        String performedBy = getAuthenticatedEmail();
+
         // Validate stock for all items first
         for (PrescriptionItem item : rx.getItems()) {
             if (item.getMedicine().getStockQuantity() < item.getQuantity()) {
@@ -109,6 +112,7 @@ public class PrescriptionService {
                     .transactionType(StockTransactionType.DISPENSED)
                     .quantityChange(-item.getQuantity())
                     .referenceId(rx.getId())
+                    .performedBy(performedBy)
                     .notes("Dispensed for RX " + rx.getPrescriptionNumber())
                     .build();
             stockTransactionRepository.save(txn);
@@ -132,7 +136,47 @@ public class PrescriptionService {
         rx.setUpdatedAt(LocalDateTime.now());
 
         Prescription saved = prescriptionRepository.save(rx);
+        auditService.logUpdate("Prescription", saved.getId().toString(), hospitalId, null);
         return PrescriptionDTO.fromEntity(saved);
+    }
+
+    /**
+     * Resolves a Doctor for prescription creation, enforcing identity checks:
+     * - DOCTOR role: must prescribe under their own identity (doctorId in DTO is ignored)
+     * - ADMIN/SUPER_ADMIN: may specify any doctor within the hospital
+     */
+    private Doctor resolveDoctor(UUID hospitalId, UUID requestedDoctorId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN")
+                        || a.getAuthority().equals("ROLE_HOSPITAL_ADMIN"));
+
+        if (isAdmin) {
+            // Admins can create prescriptions on behalf of any doctor in the hospital
+            if (requestedDoctorId == null)
+                throw new IllegalArgumentException("Doctor ID is required");
+            Doctor doctor = doctorRepository.findById(requestedDoctorId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Doctor", requestedDoctorId));
+            if (!doctor.getHospital().getId().equals(hospitalId))
+                throw new IllegalArgumentException("Doctor does not belong to this hospital");
+            return doctor;
+        }
+
+        // For DOCTOR role: resolve from authenticated user, ignore client-supplied doctorId
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
+        Doctor doctor = doctorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No doctor profile linked to authenticated user"));
+        if (!doctor.getHospital().getId().equals(hospitalId))
+            throw new IllegalArgumentException("Doctor does not belong to this hospital");
+        return doctor;
+    }
+
+    private String getAuthenticatedEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.isAuthenticated()) ? auth.getName() : "system";
     }
 
     private Prescription getRxWithTenantCheck(UUID hospitalId, UUID id) {

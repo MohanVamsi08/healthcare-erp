@@ -7,6 +7,8 @@ import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
 import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,6 +93,7 @@ public class SupplierReturnService {
         ret.setUpdatedAt(LocalDateTime.now());
 
         SupplierReturn saved = returnRepository.save(ret);
+        auditService.logUpdate("SupplierReturn", saved.getId().toString(), hospitalId, null);
         return SupplierReturnDTO.fromEntity(saved);
     }
 
@@ -99,13 +102,37 @@ public class SupplierReturnService {
         if (ret.getStatus() != SupplierReturnStatus.SHIPPED)
             throw new IllegalArgumentException("Only SHIPPED returns can be completed");
 
-        // Decrement stock for returned items
+        String performedBy = getAuthenticatedEmail();
+
+        // P1 FIX: Validate stock >= return quantity BEFORE decrementing
+        for (SupplierReturnItem item : ret.getItems()) {
+            if ("MEDICINE".equals(item.getItemType())) {
+                Medicine med = item.getMedicine();
+                if (med.getStockQuantity() < item.getQuantity()) {
+                    throw new IllegalArgumentException(
+                            "Insufficient stock to return " + med.getName()
+                                    + ": available=" + med.getStockQuantity()
+                                    + ", return_quantity=" + item.getQuantity());
+                }
+            } else {
+                HospitalSupply sup = item.getSupply();
+                if (sup.getStockQuantity() < item.getQuantity()) {
+                    throw new IllegalArgumentException(
+                            "Insufficient stock to return " + sup.getName()
+                                    + ": available=" + sup.getStockQuantity()
+                                    + ", return_quantity=" + item.getQuantity());
+                }
+            }
+        }
+
+        // Decrement stock for returned items (stock validated above)
         for (SupplierReturnItem item : ret.getItems()) {
             StockTransaction txn = StockTransaction.builder()
                     .hospital(ret.getHospital())
                     .transactionType(StockTransactionType.RETURN)
                     .quantityChange(-item.getQuantity())
                     .referenceId(ret.getId())
+                    .performedBy(performedBy)
                     .notes("Return " + ret.getReturnNumber() + " completed")
                     .build();
 
@@ -134,6 +161,11 @@ public class SupplierReturnService {
         SupplierReturn saved = returnRepository.save(ret);
         auditService.logUpdate("SupplierReturn", saved.getId().toString(), hospitalId, null);
         return SupplierReturnDTO.fromEntity(saved);
+    }
+
+    private String getAuthenticatedEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.isAuthenticated()) ? auth.getName() : "system";
     }
 
     private SupplierReturn getReturnWithTenantCheck(UUID hospitalId, UUID id) {

@@ -26,13 +26,17 @@ public class StockTransactionService {
                 .map(StockTransactionDTO::fromEntity).toList();
     }
 
-    public List<StockTransactionDTO> getByMedicine(UUID medicineId) {
-        return txnRepository.findByMedicineId(medicineId).stream()
+    public List<StockTransactionDTO> getByMedicine(UUID hospitalId, UUID medicineId) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        return txnRepository.findByMedicineIdAndHospitalId(medicineId, hospitalId).stream()
                 .map(StockTransactionDTO::fromEntity).toList();
     }
 
-    public List<StockTransactionDTO> getBySupply(UUID supplyId) {
-        return txnRepository.findBySupplyId(supplyId).stream()
+    public List<StockTransactionDTO> getBySupply(UUID hospitalId, UUID supplyId) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        return txnRepository.findBySupplyIdAndHospitalId(supplyId, hospitalId).stream()
                 .map(StockTransactionDTO::fromEntity).toList();
     }
 }

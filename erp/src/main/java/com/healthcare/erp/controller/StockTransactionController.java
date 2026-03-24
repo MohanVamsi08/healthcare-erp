@@ -27,13 +27,13 @@ public class StockTransactionController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'PHARMACIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<StockTransactionDTO>> getByMedicine(@PathVariable UUID hospitalId,
                                                                      @PathVariable UUID medicineId) {
-        return ResponseEntity.ok(txnService.getByMedicine(medicineId));
+        return ResponseEntity.ok(txnService.getByMedicine(hospitalId, medicineId));
     }
 
     @GetMapping("/supply/{supplyId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'PHARMACIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<List<StockTransactionDTO>> getBySupply(@PathVariable UUID hospitalId,
                                                                    @PathVariable UUID supplyId) {
-        return ResponseEntity.ok(txnService.getBySupply(supplyId));
+        return ResponseEntity.ok(txnService.getBySupply(hospitalId, supplyId));
     }
 }

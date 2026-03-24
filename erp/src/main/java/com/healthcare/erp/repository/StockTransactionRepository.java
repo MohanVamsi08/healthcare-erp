@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface StockTransactionRepository extends JpaRepository<StockTransaction, UUID> {
     List<StockTransaction> findByHospitalId(UUID hospitalId);
-    List<StockTransaction> findByMedicineId(UUID medicineId);
-    List<StockTransaction> findBySupplyId(UUID supplyId);
+    List<StockTransaction> findByMedicineIdAndHospitalId(UUID medicineId, UUID hospitalId);
+    List<StockTransaction> findBySupplyIdAndHospitalId(UUID supplyId, UUID hospitalId);
     List<StockTransaction> findByHospitalIdAndTransactionType(UUID hospitalId, StockTransactionType type);
 }

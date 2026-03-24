@@ -6,6 +6,8 @@ import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
 import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,6 +91,8 @@ public class MedicineService {
         if (quantity <= 0)
             throw new IllegalArgumentException("Stock quantity must be positive");
 
+        String performedBy = getAuthenticatedEmail();
+
         Medicine medicine = getMedicineWithTenantCheck(hospitalId, id);
         medicine.setStockQuantity(medicine.getStockQuantity() + quantity);
         medicine.setUpdatedAt(LocalDateTime.now());
@@ -98,11 +102,18 @@ public class MedicineService {
                 .hospital(medicine.getHospital())
                 .transactionType(StockTransactionType.ADJUSTMENT)
                 .quantityChange(quantity).notes(notes)
+                .performedBy(performedBy)
                 .build();
         stockTransactionRepository.save(txn);
 
         Medicine saved = medicineRepository.save(medicine);
+        auditService.logUpdate("Medicine", saved.getId().toString(), hospitalId, null);
         return MedicineDTO.fromEntity(saved);
+    }
+
+    private String getAuthenticatedEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.isAuthenticated()) ? auth.getName() : "system";
     }
 
     public List<MedicineDTO> getLowStock(UUID hospitalId) {

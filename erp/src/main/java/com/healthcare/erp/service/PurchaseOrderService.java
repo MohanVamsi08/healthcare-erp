@@ -7,6 +7,8 @@ import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
 import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,6 +100,7 @@ public class PurchaseOrderService {
         po.setUpdatedAt(LocalDateTime.now());
 
         PurchaseOrder saved = poRepository.save(po);
+        auditService.logUpdate("PurchaseOrder", saved.getId().toString(), hospitalId, null);
         return PurchaseOrderDTO.fromEntity(saved);
     }
 
@@ -118,6 +121,7 @@ public class PurchaseOrderService {
                     .transactionType(StockTransactionType.PURCHASE)
                     .quantityChange(item.getQuantity())
                     .referenceId(po.getId())
+                    .performedBy(getAuthenticatedEmail())
                     .notes("PO " + po.getOrderNumber() + " received")
                     .build();
 
@@ -153,7 +157,13 @@ public class PurchaseOrderService {
         po.setUpdatedAt(LocalDateTime.now());
 
         PurchaseOrder saved = poRepository.save(po);
+        auditService.logUpdate("PurchaseOrder", saved.getId().toString(), hospitalId, null);
         return PurchaseOrderDTO.fromEntity(saved);
+    }
+
+    private String getAuthenticatedEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.isAuthenticated()) ? auth.getName() : "system";
     }
 
     private PurchaseOrder getPOWithTenantCheck(UUID hospitalId, UUID id) {

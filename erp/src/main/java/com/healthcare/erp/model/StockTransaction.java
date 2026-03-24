@@ -42,6 +42,9 @@ public class StockTransaction {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "performed_by")
+    private String performedBy;
+
     @Builder.Default
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
