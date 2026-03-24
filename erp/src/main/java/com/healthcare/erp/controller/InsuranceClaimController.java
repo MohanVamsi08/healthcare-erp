@@ -3,6 +3,7 @@ package com.healthcare.erp.controller;
 import com.healthcare.erp.dto.InsuranceClaimDTO;
 import com.healthcare.erp.model.ClaimStatus;
 import com.healthcare.erp.service.InsuranceClaimService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class InsuranceClaimController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<InsuranceClaimDTO> submit(@PathVariable UUID hospitalId,
-                                                     @RequestBody InsuranceClaimDTO dto) {
+                                                     @RequestBody @Valid InsuranceClaimDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(claimService.submit(hospitalId, dto));
     }
 

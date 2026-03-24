@@ -58,6 +58,17 @@ public class InsuranceClaimService {
             throw new IllegalArgumentException("Invoice does not belong to this patient");
         }
 
+        // Service-level validation (defense-in-depth)
+        if (dto.claimedAmount() == null || dto.claimedAmount().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Claimed amount must be greater than zero");
+        }
+        if (dto.providerName() == null || dto.providerName().isBlank()) {
+            throw new IllegalArgumentException("Provider name is required");
+        }
+        if (dto.policyNumber() == null || dto.policyNumber().isBlank()) {
+            throw new IllegalArgumentException("Policy number is required");
+        }
+
         // Generate claim number
         String claimNumber = "CLM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
@@ -92,7 +103,14 @@ public class InsuranceClaimService {
         claim.setStatus(newStatus);
         claim.setUpdatedAt(LocalDateTime.now());
 
-        if (newStatus == ClaimStatus.APPROVED && approvedAmount != null) {
+        if (newStatus == ClaimStatus.APPROVED) {
+            if (approvedAmount == null || approvedAmount.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Approved amount must be greater than zero");
+            }
+            if (approvedAmount.compareTo(claim.getClaimedAmount()) > 0) {
+                throw new IllegalArgumentException("Approved amount (" + approvedAmount
+                        + ") cannot exceed claimed amount (" + claim.getClaimedAmount() + ")");
+            }
             claim.setApprovedAmount(approvedAmount);
         }
         if (newStatus == ClaimStatus.SETTLED) {

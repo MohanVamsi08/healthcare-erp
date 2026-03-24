@@ -2,6 +2,9 @@ package com.healthcare.erp.dto;
 
 import com.healthcare.erp.model.Invoice;
 import com.healthcare.erp.model.InvoiceStatus;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,10 +15,15 @@ public record InvoiceDTO(
         UUID id,
         String invoiceNumber,
         UUID appointmentId,
+        @NotNull(message = "Patient ID is required")
         UUID patientId,
         String patientName,
         UUID hospitalId,
+        @NotNull(message = "Subtotal is required")
+        @DecimalMin(value = "0.01", message = "Subtotal must be greater than zero")
         BigDecimal subtotal,
+        @DecimalMin(value = "0.00", message = "GST rate cannot be negative")
+        @DecimalMax(value = "100.00", message = "GST rate cannot exceed 100%")
         BigDecimal gstRate,
         BigDecimal gstAmount,
         BigDecimal totalAmount,

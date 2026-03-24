@@ -59,31 +59,22 @@ public class InvoiceService {
             throw new IllegalArgumentException("Patient does not belong to this hospital");
         }
 
-        // Generate invoice number (hospital-specific sequential)
-        long count = invoiceRepository.countByHospitalId(hospitalId);
-        String invoiceNumber = String.format("INV-%04d", count + 1);
-
-        // GST calculation
+        // Service-level validation (defense-in-depth)
         BigDecimal subtotal = dto.subtotal();
+        if (subtotal == null || subtotal.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Subtotal must be greater than zero");
+        }
         BigDecimal gstRate = dto.gstRate() != null ? dto.gstRate() : new BigDecimal("18.00");
+        if (gstRate.compareTo(BigDecimal.ZERO) < 0 || gstRate.compareTo(new BigDecimal("100.00")) > 0) {
+            throw new IllegalArgumentException("GST rate must be between 0 and 100");
+        }
         BigDecimal gstAmount = subtotal.multiply(gstRate).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
         BigDecimal totalAmount = subtotal.add(gstAmount);
 
-        Invoice invoice = Invoice.builder()
-                .invoiceNumber(invoiceNumber)
-                .patient(patient)
-                .hospital(hospital)
-                .subtotal(subtotal)
-                .gstRate(gstRate)
-                .gstAmount(gstAmount)
-                .totalAmount(totalAmount)
-                .dueDate(dto.dueDate())
-                .notes(dto.notes())
-                .build();
-
         // Link appointment if provided
+        Appointment appt = null;
         if (dto.appointmentId() != null) {
-            Appointment appt = appointmentRepository.findById(dto.appointmentId())
+            appt = appointmentRepository.findById(dto.appointmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Appointment", dto.appointmentId()));
             if (!appt.getHospital().getId().equals(hospitalId)) {
                 throw new IllegalArgumentException("Appointment does not belong to this hospital");
@@ -91,12 +82,44 @@ public class InvoiceService {
             if (!appt.getPatient().getId().equals(dto.patientId())) {
                 throw new IllegalArgumentException("Appointment does not belong to this patient");
             }
-            invoice.setAppointment(appt);
         }
 
-        Invoice saved = invoiceRepository.save(invoice);
-        auditService.logCreate("Invoice", saved.getId().toString(), hospitalId, null);
-        return InvoiceDTO.fromEntity(saved);
+        // Generate invoice number using MAX+1 with retry on collision
+        int maxRetries = 3;
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            int nextSeq = invoiceRepository.findMaxInvoiceSequenceByHospitalId(hospitalId).orElse(0) + 1 + attempt;
+            String invoiceNumber = String.format("INV-%04d", nextSeq);
+
+            Invoice invoice = Invoice.builder()
+                    .invoiceNumber(invoiceNumber)
+                    .patient(patient)
+                    .hospital(hospital)
+                    .subtotal(subtotal)
+                    .gstRate(gstRate)
+                    .gstAmount(gstAmount)
+                    .totalAmount(totalAmount)
+                    .dueDate(dto.dueDate())
+                    .notes(dto.notes())
+                    .build();
+
+            if (appt != null) {
+                invoice.setAppointment(appt);
+            }
+
+            try {
+                Invoice saved = invoiceRepository.save(invoice);
+                invoiceRepository.flush(); // Force DB write to trigger unique constraint
+                auditService.logCreate("Invoice", saved.getId().toString(), hospitalId, null);
+                return InvoiceDTO.fromEntity(saved);
+            } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                if (attempt == maxRetries - 1) {
+                    throw new IllegalStateException(
+                            "Failed to generate unique invoice number after " + maxRetries + " attempts", ex);
+                }
+                // Retry with next sequence number
+            }
+        }
+        throw new IllegalStateException("Failed to generate unique invoice number");
     }
 
     public InvoiceDTO issue(UUID hospitalId, UUID invoiceId) {

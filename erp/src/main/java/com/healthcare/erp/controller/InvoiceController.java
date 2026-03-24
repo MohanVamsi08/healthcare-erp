@@ -2,6 +2,7 @@ package com.healthcare.erp.controller;
 
 import com.healthcare.erp.dto.InvoiceDTO;
 import com.healthcare.erp.service.InvoiceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class InvoiceController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<InvoiceDTO> create(@PathVariable UUID hospitalId,
-                                              @RequestBody InvoiceDTO dto) {
+                                              @RequestBody @Valid InvoiceDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(invoiceService.create(hospitalId, dto));
     }
 
