@@ -1,0 +1,13 @@
+package com.healthcare.erp.repository;
+
+import com.healthcare.erp.model.Prescription;
+import com.healthcare.erp.model.PrescriptionStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+import java.util.UUID;
+
+public interface PrescriptionRepository extends JpaRepository<Prescription, UUID> {
+    List<Prescription> findByHospitalId(UUID hospitalId);
+    List<Prescription> findByHospitalIdAndStatus(UUID hospitalId, PrescriptionStatus status);
+    List<Prescription> findByPatientIdAndHospitalId(UUID patientId, UUID hospitalId);
+}
