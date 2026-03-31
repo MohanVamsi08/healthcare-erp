@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface PatientConsentRepository extends JpaRepository<PatientConsent, UUID> {
     List<PatientConsent> findByHospitalId(UUID hospitalId);
     List<PatientConsent> findByPatientId(UUID patientId);
+    java.util.Optional<PatientConsent> findByPatientIdAndHospitalId(UUID patientId, UUID hospitalId);
 }

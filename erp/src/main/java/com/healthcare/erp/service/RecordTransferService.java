@@ -26,6 +26,7 @@ public class RecordTransferService {
     private final RecordTransferRepository transferRepository;
     private final HospitalRepository hospitalRepository;
     private final PatientRepository patientRepository;
+    private final PatientConsentRepository consentRepository;
     private final AuditService auditService;
 
     public List<RecordTransferDTO> getByFromHospital(UUID hospitalId) {
@@ -58,6 +59,11 @@ public class RecordTransferService {
     }
 
     public RecordTransferDTO create(UUID hospitalId, RecordTransferDTO dto) {
+        // ensure the creator is the from-hospital (path hospitalId must match dto.fromHospitalId)
+        if (!dto.fromHospitalId().equals(hospitalId)) {
+            throw new IllegalArgumentException("fromHospitalId must match the path hospitalId");
+        }
+
         Hospital from = hospitalRepository.findById(dto.fromHospitalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Hospital", dto.fromHospitalId()));
         Hospital to = hospitalRepository.findById(dto.toHospitalId())
@@ -66,6 +72,12 @@ public class RecordTransferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", dto.patientId()));
         if (!patient.getHospital().getId().equals(hospitalId)) {
             throw new IllegalArgumentException("Patient does not belong to this hospital");
+        }
+
+        // Ensure patient has given consent to the destination hospital
+        var consentOpt = consentRepository.findByPatientIdAndHospitalId(patient.getId(), to.getId());
+        if (consentOpt.isEmpty() || !consentOpt.get().isConsentGiven()) {
+            throw new IllegalStateException("Patient has not given consent to share records with the destination hospital");
         }
 
         RecordTransferRequest r = RecordTransferRequest.builder()
@@ -89,10 +101,31 @@ public class RecordTransferService {
         if (!r.getFromHospital().getId().equals(hospitalId) && !r.getToHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("RecordTransferRequest", id);
         }
-        // validate transitions (simple example)
-        if (r.getStatus() == TransferStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot change status of a completed transfer");
+        // enforce strict workflow: PENDING -> APPROVED/REJECTED (only toHospital), APPROVED -> COMPLETED (only toHospital)
+        TransferStatus current = r.getStatus();
+        if (current == TransferStatus.COMPLETED || current == TransferStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot change status of a completed or cancelled transfer");
         }
+
+        // Only destination hospital may approve or reject a pending transfer
+        if (current == TransferStatus.PENDING) {
+            if (newStatus != TransferStatus.APPROVED && newStatus != TransferStatus.REJECTED) {
+                throw new IllegalStateException("PENDING transfers can only move to APPROVED or REJECTED");
+            }
+            if (!r.getToHospital().getId().equals(hospitalId) && r.getToHospital() != null) {
+                throw new IllegalStateException("Only destination hospital can approve or reject this transfer");
+            }
+        }
+
+        if (current == TransferStatus.APPROVED) {
+            if (newStatus != TransferStatus.COMPLETED) {
+                throw new IllegalStateException("APPROVED transfers can only move to COMPLETED");
+            }
+            if (!r.getToHospital().getId().equals(hospitalId)) {
+                throw new IllegalStateException("Only destination hospital can complete this transfer");
+            }
+        }
+
         r.setStatus(newStatus);
         r.setUpdatedAt(LocalDateTime.now());
         RecordTransferRequest saved = transferRepository.save(r);
@@ -100,13 +133,17 @@ public class RecordTransferService {
         return RecordTransferDTO.fromEntity(saved);
     }
 
-    public void delete(UUID hospitalId, UUID id) {
+    public RecordTransferDTO cancel(UUID hospitalId, UUID id) {
         RecordTransferRequest r = transferRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RecordTransferRequest", id));
-        if (!r.getFromHospital().getId().equals(hospitalId) && !r.getToHospital().getId().equals(hospitalId)) {
-            throw new ResourceNotFoundException("RecordTransferRequest", id);
+        // Only fromHospital or SUPER_ADMIN (tenantGuard ensures roles) can cancel via path hospitalId
+        if (!r.getFromHospital().getId().equals(hospitalId)) {
+            throw new IllegalStateException("Only originating hospital can cancel the transfer");
         }
-        transferRepository.delete(r);
-        auditService.logDelete("RecordTransfer", id.toString(), hospitalId, null);
+        r.setStatus(TransferStatus.CANCELLED);
+        r.setUpdatedAt(LocalDateTime.now());
+        RecordTransferRequest saved = transferRepository.save(r);
+        auditService.logUpdate("RecordTransfer", id.toString(), hospitalId, "status=CANCELLED");
+        return RecordTransferDTO.fromEntity(saved);
     }
 }

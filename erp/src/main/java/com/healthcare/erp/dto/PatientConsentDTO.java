@@ -3,10 +3,16 @@ package com.healthcare.erp.dto;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+
 public record PatientConsentDTO(
         UUID id,
+        @NotNull
         UUID patientId,
+        @NotNull
         UUID hospitalId,
+        @NotBlank
         String consentDocument,
         boolean consentGiven,
         LocalDateTime createdAt
@@ -16,14 +22,9 @@ public record PatientConsentDTO(
                 p.getId(),
                 p.getPatient().getId(),
                 p.getHospital().getId(),
-                maskDocument(p.getConsentDocument()),
+                p.getConsentDocument(),
                 p.isConsentGiven(),
                 p.getCreatedAt()
         );
-    }
-
-    private static String maskDocument(String doc) {
-        if (doc == null || doc.length() <= 4) return doc;
-        return "****" + doc.substring(doc.length() - 4);
     }
 }

@@ -39,7 +39,7 @@ public class RecordTransferController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<RecordTransferDTO> create(@PathVariable UUID hospitalId, @RequestBody RecordTransferDTO dto) {
+    public ResponseEntity<RecordTransferDTO> create(@PathVariable UUID hospitalId, @RequestBody @jakarta.validation.Valid RecordTransferDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(transferService.create(hospitalId, dto));
     }
 
@@ -49,10 +49,9 @@ public class RecordTransferController {
         return ResponseEntity.ok(transferService.updateStatus(hospitalId, id, status));
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<Void> delete(@PathVariable UUID hospitalId, @PathVariable UUID id) {
-        transferService.delete(hospitalId, id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<RecordTransferDTO> cancel(@PathVariable UUID hospitalId, @PathVariable UUID id) {
+        return ResponseEntity.ok(transferService.cancel(hospitalId, id));
     }
 }

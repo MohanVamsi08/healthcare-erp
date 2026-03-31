@@ -4,15 +4,22 @@ import com.healthcare.erp.model.TransferStatus;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+
 public record RecordTransferDTO(
-        UUID id,
-        UUID patientId,
-        UUID fromHospitalId,
-        UUID toHospitalId,
-        TransferStatus status,
-        String reason,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+    UUID id,
+    @NotNull
+    UUID patientId,
+    @NotNull
+    UUID fromHospitalId,
+    @NotNull
+    UUID toHospitalId,
+    TransferStatus status,
+    @NotBlank
+    String reason,
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt
 ) {
     public static RecordTransferDTO fromEntity(com.healthcare.erp.model.RecordTransferRequest r) {
         return new RecordTransferDTO(
