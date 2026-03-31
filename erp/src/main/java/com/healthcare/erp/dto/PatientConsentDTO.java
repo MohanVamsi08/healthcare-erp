@@ -16,14 +16,9 @@ public record PatientConsentDTO(
                 p.getId(),
                 p.getPatient().getId(),
                 p.getHospital().getId(),
-                maskDocument(p.getConsentDocument()),
+                p.getConsentDocument(),
                 p.isConsentGiven(),
                 p.getCreatedAt()
         );
-    }
-
-    private static String maskDocument(String doc) {
-        if (doc == null || doc.length() <= 4) return doc;
-        return "****" + doc.substring(doc.length() - 4);
     }
 }

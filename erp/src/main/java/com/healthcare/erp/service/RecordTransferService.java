@@ -58,6 +58,14 @@ public class RecordTransferService {
     }
 
     public RecordTransferDTO create(UUID hospitalId, RecordTransferDTO dto) {
+        // Fix #2: fromHospitalId must match the caller's hospital
+        if (!dto.fromHospitalId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Transfer must originate from your own hospital");
+        }
+        if (dto.fromHospitalId().equals(dto.toHospitalId())) {
+            throw new IllegalArgumentException("Source and destination hospitals must be different");
+        }
+
         Hospital from = hospitalRepository.findById(dto.fromHospitalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Hospital", dto.fromHospitalId()));
         Hospital to = hospitalRepository.findById(dto.toHospitalId())
@@ -89,24 +97,46 @@ public class RecordTransferService {
         if (!r.getFromHospital().getId().equals(hospitalId) && !r.getToHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("RecordTransferRequest", id);
         }
-        // validate transitions (simple example)
-        if (r.getStatus() == TransferStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot change status of a completed transfer");
-        }
+
+        // Fix #3: Strict status transition validation
+        validateStatusTransition(r.getStatus(), newStatus);
+
+        String previousStatus = r.getStatus().name();
         r.setStatus(newStatus);
         r.setUpdatedAt(LocalDateTime.now());
         RecordTransferRequest saved = transferRepository.save(r);
-        auditService.logUpdate("RecordTransfer", id.toString(), hospitalId, "status=" + newStatus);
+        auditService.log("STATUS_CHANGE", "RecordTransfer", id.toString(), hospitalId, null,
+                previousStatus + " -> " + newStatus.name());
         return RecordTransferDTO.fromEntity(saved);
     }
 
-    public void delete(UUID hospitalId, UUID id) {
+    // Fix #5: No hard delete — use cancel instead for audit trail integrity
+    public RecordTransferDTO cancel(UUID hospitalId, UUID id) {
         RecordTransferRequest r = transferRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RecordTransferRequest", id));
-        if (!r.getFromHospital().getId().equals(hospitalId) && !r.getToHospital().getId().equals(hospitalId)) {
-            throw new ResourceNotFoundException("RecordTransferRequest", id);
+        if (!r.getFromHospital().getId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Only the originating hospital can cancel a transfer");
         }
-        transferRepository.delete(r);
-        auditService.logDelete("RecordTransfer", id.toString(), hospitalId, null);
+        if (r.getStatus() != TransferStatus.PENDING) {
+            throw new IllegalArgumentException("Only PENDING transfers can be cancelled");
+        }
+        String previousStatus = r.getStatus().name();
+        r.setStatus(TransferStatus.CANCELLED);
+        r.setUpdatedAt(LocalDateTime.now());
+        RecordTransferRequest saved = transferRepository.save(r);
+        auditService.log("STATUS_CHANGE", "RecordTransfer", id.toString(), hospitalId, null,
+                previousStatus + " -> CANCELLED");
+        return RecordTransferDTO.fromEntity(saved);
+    }
+
+    private void validateStatusTransition(TransferStatus current, TransferStatus target) {
+        boolean valid = switch (current) {
+            case PENDING -> target == TransferStatus.APPROVED || target == TransferStatus.REJECTED;
+            case APPROVED -> target == TransferStatus.COMPLETED;
+            case REJECTED, COMPLETED, CANCELLED -> false;
+        };
+        if (!valid) {
+            throw new IllegalArgumentException("Invalid status transition: " + current + " -> " + target);
+        }
     }
 }
