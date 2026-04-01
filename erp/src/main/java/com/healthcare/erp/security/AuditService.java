@@ -1,25 +1,22 @@
 package com.healthcare.erp.security;
 
-import com.healthcare.erp.model.AuditLog;
-import com.healthcare.erp.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+/**
+ * Main audit facade. Captures identity synchronously on the calling thread,
+ * then delegates to AuditLogWriter (a separate bean) for true @Async persistence.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuditService {
 
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogWriter auditLogWriter;
 
-    /**
-     * Captures the caller's identity from the SecurityContext on the calling thread,
-     * then delegates the actual DB write to an async method so identity is never lost.
-     */
     public void log(String action, String entityType, String entityId,
                     UUID hospitalId, String ipAddress, String details) {
         // Capture identity on the CALLING thread (where SecurityContext is valid)
@@ -35,26 +32,8 @@ public class AuditService {
                     .orElse("UNKNOWN");
         }
 
-        // Pass captured identity to async writer
-        writeAuditLog(action, entityType, entityId, hospitalId, ipAddress, details, email, role);
-    }
-
-    @Async
-    protected void writeAuditLog(String action, String entityType, String entityId,
-                                 UUID hospitalId, String ipAddress, String details,
-                                 String userEmail, String userRole) {
-        AuditLog log = AuditLog.builder()
-                .action(action)
-                .entityType(entityType)
-                .entityId(entityId)
-                .userEmail(userEmail)
-                .userRole(userRole)
-                .hospitalId(hospitalId)
-                .ipAddress(ipAddress)
-                .details(details)
-                .build();
-
-        auditLogRepository.save(log);
+        // Delegate to separate bean — @Async proxy works correctly here
+        auditLogWriter.write(action, entityType, entityId, hospitalId, ipAddress, details, email, role);
     }
 
     // Convenience methods

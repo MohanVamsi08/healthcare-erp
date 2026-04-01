@@ -30,6 +30,7 @@ public class HospitalService {
     public HospitalDTO getById(UUID id) {
         Hospital hospital = hospitalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hospital", id));
+        auditService.logRead("Hospital", id.toString(), id, null);
         return HospitalDTO.fromEntity(hospital);
     }
 

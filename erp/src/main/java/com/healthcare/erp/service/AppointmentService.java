@@ -57,6 +57,7 @@ public class AppointmentService {
         if (!hospitalRepository.existsById(hospitalId)) {
             throw new ResourceNotFoundException("Hospital", hospitalId);
         }
+        auditService.logRead("Appointment", "LIST", hospitalId, null);
         return appointmentRepository.findByHospitalId(hospitalId)
                 .stream().map(AppointmentDTO::fromEntity).toList();
     }
@@ -68,6 +69,7 @@ public class AppointmentService {
         if (!appt.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("Appointment", appointmentId);
         }
+        auditService.logRead("Appointment", appointmentId.toString(), hospitalId, null);
         return AppointmentDTO.fromEntity(appt);
     }
 

@@ -84,6 +84,7 @@ public class UserService {
         if (!hospitalRepository.existsById(hospitalId)) {
             throw new ResourceNotFoundException("Hospital", hospitalId);
         }
+        auditService.logRead("User", "LIST", hospitalId, null);
         return userRepository.findByHospitalIdAndIsActiveTrue(hospitalId)
                 .stream()
                 .map(UserDTO::fromEntity)
@@ -96,6 +97,7 @@ public class UserService {
         if (!user.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("User", userId);
         }
+        auditService.logRead("User", userId.toString(), hospitalId, null);
         return UserDTO.fromEntity(user);
     }
 

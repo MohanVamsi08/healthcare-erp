@@ -34,12 +34,15 @@ public class PrescriptionService {
     public List<PrescriptionDTO> getByHospital(UUID hospitalId) {
         if (!hospitalRepository.existsById(hospitalId))
             throw new ResourceNotFoundException("Hospital", hospitalId);
+        auditService.logRead("Prescription", "LIST", hospitalId, null);
         return prescriptionRepository.findByHospitalId(hospitalId).stream()
                 .map(PrescriptionDTO::fromEntity).toList();
     }
 
     public PrescriptionDTO getById(UUID hospitalId, UUID id) {
-        return PrescriptionDTO.fromEntity(getRxWithTenantCheck(hospitalId, id));
+        Prescription rx = getRxWithTenantCheck(hospitalId, id);
+        auditService.logRead("Prescription", id.toString(), hospitalId, null);
+        return PrescriptionDTO.fromEntity(rx);
     }
 
     public PrescriptionDTO create(UUID hospitalId, PrescriptionDTO dto) {
