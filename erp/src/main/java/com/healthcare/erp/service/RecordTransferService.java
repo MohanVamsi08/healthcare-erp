@@ -9,6 +9,7 @@ import com.healthcare.erp.model.Patient;
 import com.healthcare.erp.repository.RecordTransferRepository;
 import com.healthcare.erp.repository.HospitalRepository;
 import com.healthcare.erp.repository.PatientRepository;
+import com.healthcare.erp.repository.PatientConsentRepository;
 import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class RecordTransferService {
     private final RecordTransferRepository transferRepository;
     private final HospitalRepository hospitalRepository;
     private final PatientRepository patientRepository;
+    private final PatientConsentRepository consentRepository;
     private final AuditService auditService;
 
     public List<RecordTransferDTO> getByFromHospital(UUID hospitalId) {
@@ -49,7 +51,6 @@ public class RecordTransferService {
     public RecordTransferDTO getById(UUID hospitalId, UUID id) {
         RecordTransferRequest r = transferRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RecordTransferRequest", id));
-        // ensure either fromHospital or toHospital matches the path hospitalId
         if (!r.getFromHospital().getId().equals(hospitalId) && !r.getToHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("RecordTransferRequest", id);
         }
@@ -58,7 +59,7 @@ public class RecordTransferService {
     }
 
     public RecordTransferDTO create(UUID hospitalId, RecordTransferDTO dto) {
-        // Fix #2: fromHospitalId must match the caller's hospital
+        // Source hospital must match caller's hospital
         if (!dto.fromHospitalId().equals(hospitalId)) {
             throw new IllegalArgumentException("Transfer must originate from your own hospital");
         }
@@ -76,6 +77,14 @@ public class RecordTransferService {
             throw new IllegalArgumentException("Patient does not belong to this hospital");
         }
 
+        // P1 Fix: Require patient consent before cross-hospital sharing
+        boolean hasConsent = consentRepository
+                .existsByPatientIdAndHospitalIdAndConsentGivenTrue(dto.patientId(), hospitalId);
+        if (!hasConsent) {
+            throw new IllegalArgumentException(
+                    "Patient has not given consent for cross-hospital record sharing");
+        }
+
         RecordTransferRequest r = RecordTransferRequest.builder()
                 .patient(patient)
                 .fromHospital(from)
@@ -91,6 +100,12 @@ public class RecordTransferService {
         return RecordTransferDTO.fromEntity(saved);
     }
 
+    /**
+     * Role-scoped status transitions:
+     * - Source hospital (fromHospital) can only: CANCEL (via cancel endpoint)
+     * - Destination hospital (toHospital) can: APPROVE, REJECT a PENDING transfer
+     * - Source hospital can: COMPLETE an APPROVED transfer (they send the data)
+     */
     public RecordTransferDTO updateStatus(UUID hospitalId, UUID id, TransferStatus newStatus) {
         RecordTransferRequest r = transferRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RecordTransferRequest", id));
@@ -98,8 +113,19 @@ public class RecordTransferService {
             throw new ResourceNotFoundException("RecordTransferRequest", id);
         }
 
-        // Fix #3: Strict status transition validation
+        // Strict status transition validation
         validateStatusTransition(r.getStatus(), newStatus);
+
+        // Role-scoped: WHO can perform WHICH transition
+        boolean isFromHospital = r.getFromHospital().getId().equals(hospitalId);
+        boolean isToHospital = r.getToHospital().getId().equals(hospitalId);
+
+        if ((newStatus == TransferStatus.APPROVED || newStatus == TransferStatus.REJECTED) && !isToHospital) {
+            throw new IllegalArgumentException("Only the destination hospital can approve or reject a transfer");
+        }
+        if (newStatus == TransferStatus.COMPLETED && !isFromHospital) {
+            throw new IllegalArgumentException("Only the originating hospital can mark a transfer as completed");
+        }
 
         String previousStatus = r.getStatus().name();
         r.setStatus(newStatus);
@@ -110,7 +136,7 @@ public class RecordTransferService {
         return RecordTransferDTO.fromEntity(saved);
     }
 
-    // Fix #5: No hard delete — use cancel instead for audit trail integrity
+    // Only the originating hospital can cancel, only PENDING transfers
     public RecordTransferDTO cancel(UUID hospitalId, UUID id) {
         RecordTransferRequest r = transferRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RecordTransferRequest", id));

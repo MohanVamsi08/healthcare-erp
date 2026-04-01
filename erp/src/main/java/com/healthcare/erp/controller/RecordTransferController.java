@@ -3,6 +3,7 @@ package com.healthcare.erp.controller;
 import com.healthcare.erp.dto.RecordTransferDTO;
 import com.healthcare.erp.model.TransferStatus;
 import com.healthcare.erp.service.RecordTransferService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class RecordTransferController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<RecordTransferDTO> create(@PathVariable UUID hospitalId, @RequestBody RecordTransferDTO dto) {
+    public ResponseEntity<RecordTransferDTO> create(@PathVariable UUID hospitalId, @Valid @RequestBody RecordTransferDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(transferService.create(hospitalId, dto));
     }
 

@@ -26,22 +26,25 @@ public class PatientConsentService {
     private final PatientRepository patientRepository;
     private final AuditService auditService;
 
-    public List<PatientConsentDTO> getByHospital(UUID hospitalId) {
+    public List<PatientConsentDTO> getByHospital(UUID hospitalId, boolean fullAccess) {
         if (!hospitalRepository.existsById(hospitalId)) {
             throw new ResourceNotFoundException("Hospital", hospitalId);
         }
         auditService.logRead("PatientConsent", "LIST", hospitalId, null);
-        return consentRepository.findByHospitalId(hospitalId).stream().map(PatientConsentDTO::fromEntity).toList();
+        var mapper = fullAccess
+                ? (java.util.function.Function<com.healthcare.erp.model.PatientConsent, PatientConsentDTO>) PatientConsentDTO::fromEntity
+                : (java.util.function.Function<com.healthcare.erp.model.PatientConsent, PatientConsentDTO>) PatientConsentDTO::fromEntityRedacted;
+        return consentRepository.findByHospitalId(hospitalId).stream().map(mapper).toList();
     }
 
-    public PatientConsentDTO getById(UUID hospitalId, UUID id) {
+    public PatientConsentDTO getById(UUID hospitalId, UUID id, boolean fullAccess) {
         PatientConsent p = consentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("PatientConsent", id));
         if (!p.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("PatientConsent", id);
         }
         auditService.logRead("PatientConsent", id.toString(), hospitalId, null);
-        return PatientConsentDTO.fromEntity(p);
+        return fullAccess ? PatientConsentDTO.fromEntity(p) : PatientConsentDTO.fromEntityRedacted(p);
     }
 
     public PatientConsentDTO create(UUID hospitalId, PatientConsentDTO dto) {
