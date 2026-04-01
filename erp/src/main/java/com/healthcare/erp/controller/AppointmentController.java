@@ -4,10 +4,10 @@ import com.healthcare.erp.dto.AppointmentDTO;
 import com.healthcare.erp.model.AppointmentStatus;
 import com.healthcare.erp.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class AppointmentController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST', 'DOCTOR') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<AppointmentDTO> create(
             @PathVariable UUID hospitalId,
-            @RequestBody AppointmentDTO dto) {
+            @Valid @RequestBody AppointmentDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.create(hospitalId, dto));
     }
 
@@ -47,7 +47,7 @@ public class AppointmentController {
     public ResponseEntity<AppointmentDTO> update(
             @PathVariable UUID hospitalId,
             @PathVariable UUID appointmentId,
-            @RequestBody AppointmentDTO dto) {
+            @Valid @RequestBody AppointmentDTO dto) {
         return ResponseEntity.ok(appointmentService.update(hospitalId, appointmentId, dto));
     }
 
@@ -56,7 +56,7 @@ public class AppointmentController {
     public ResponseEntity<AppointmentDTO> updateStatus(
             @PathVariable UUID hospitalId,
             @PathVariable UUID appointmentId,
-            @RequestBody Map<String, String> body) {
+            @Valid @RequestBody Map<String, String> body) {
         AppointmentStatus status = AppointmentStatus.valueOf(body.get("status"));
         return ResponseEntity.ok(appointmentService.updateStatus(hospitalId, appointmentId, status));
     }

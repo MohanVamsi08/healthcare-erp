@@ -8,6 +8,7 @@ import com.healthcare.erp.model.Role;
 import com.healthcare.erp.model.User;
 import com.healthcare.erp.repository.HospitalRepository;
 import com.healthcare.erp.repository.UserRepository;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final HospitalRepository hospitalRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
     /**
      * SUPER_ADMIN creates a HOSPITAL_ADMIN for a specific hospital.
@@ -43,7 +45,10 @@ public class UserService {
                 .hospital(hospital)
                 .build();
 
-        return UserDTO.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        auditService.logCreate("User", saved.getId().toString(), hospital.getId(),
+                "role=HOSPITAL_ADMIN");
+        return UserDTO.fromEntity(saved);
     }
 
     /**
@@ -68,7 +73,10 @@ public class UserService {
                 .hospital(hospital)
                 .build();
 
-        return UserDTO.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        auditService.logCreate("User", saved.getId().toString(), hospitalId,
+                "role=" + request.role());
+        return UserDTO.fromEntity(saved);
     }
 
     public List<UserDTO> getUsersByHospital(UUID hospitalId) {
@@ -105,7 +113,9 @@ public class UserService {
             user.setRole(request.role());
         }
 
-        return UserDTO.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        auditService.log("UPDATE", "User", userId.toString(), hospitalId, null, null);
+        return UserDTO.fromEntity(saved);
     }
 
     public void deactivateUser(UUID hospitalId, UUID userId) {
@@ -118,6 +128,7 @@ public class UserService {
 
         user.setActive(false);
         userRepository.save(user);
+        auditService.log("DEACTIVATE", "User", userId.toString(), hospitalId, null, null);
     }
 
     private void validateEmailNotTaken(String email) {

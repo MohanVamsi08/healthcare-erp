@@ -4,6 +4,7 @@ import com.healthcare.erp.dto.StaffDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class StaffService {
     private final HospitalRepository hospitalRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public List<StaffDTO> getByHospitalId(UUID hospitalId) {
         if (!hospitalRepository.existsById(hospitalId)) {
@@ -77,7 +79,9 @@ public class StaffService {
             staff.setUser(user);
         }
 
-        return StaffDTO.fromEntity(staffRepository.save(staff));
+        Staff saved = staffRepository.save(staff);
+        auditService.logCreate("Staff", saved.getId().toString(), hospitalId, null);
+        return StaffDTO.fromEntity(saved);
     }
 
     public StaffDTO update(UUID hospitalId, UUID id, StaffDTO dto) {
@@ -95,7 +99,9 @@ public class StaffService {
         if (dto.role() != null) staff.setRole(dto.role());
         if (dto.isActive() != null) staff.setActive(dto.isActive());
 
-        return StaffDTO.fromEntity(staffRepository.save(staff));
+        Staff saved = staffRepository.save(staff);
+        auditService.log("UPDATE", "Staff", id.toString(), hospitalId, null, null);
+        return StaffDTO.fromEntity(saved);
     }
 
     public void deactivate(UUID hospitalId, UUID id) {
@@ -106,5 +112,6 @@ public class StaffService {
         }
         staff.setActive(false);
         staffRepository.save(staff);
+        auditService.log("DEACTIVATE", "Staff", id.toString(), hospitalId, null, null);
     }
 }

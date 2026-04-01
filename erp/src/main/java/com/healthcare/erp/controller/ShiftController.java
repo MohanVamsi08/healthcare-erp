@@ -3,10 +3,10 @@ package com.healthcare.erp.controller;
 import com.healthcare.erp.dto.ShiftDTO;
 import com.healthcare.erp.service.ShiftService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;import org.springframework.format.annotation.DateTimeFormat;
+import jakarta.validation.Valid;import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,7 +40,7 @@ public class ShiftController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<ShiftDTO> create(@PathVariable UUID hospitalId,
-                                            @RequestBody ShiftDTO dto) {
+                                            @Valid @RequestBody ShiftDTO dto) {
         return ResponseEntity.ok(shiftService.create(hospitalId, dto));
     }
 
@@ -48,7 +48,7 @@ public class ShiftController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<ShiftDTO> update(@PathVariable UUID hospitalId,
                                             @PathVariable UUID shiftId,
-                                            @RequestBody ShiftDTO dto) {
+                                            @Valid @RequestBody ShiftDTO dto) {
         return ResponseEntity.ok(shiftService.update(hospitalId, shiftId, dto));
     }
 }

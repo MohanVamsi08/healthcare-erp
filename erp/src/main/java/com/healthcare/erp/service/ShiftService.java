@@ -4,6 +4,7 @@ import com.healthcare.erp.dto.ShiftDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class ShiftService {
     private final ShiftRepository shiftRepository;
     private final StaffRepository staffRepository;
     private final HospitalRepository hospitalRepository;
+    private final AuditService auditService;
 
     public List<ShiftDTO> getByHospitalAndDate(UUID hospitalId, LocalDate date) {
         if (!hospitalRepository.existsById(hospitalId)) {
@@ -59,7 +61,9 @@ public class ShiftService {
                 .notes(dto.notes())
                 .build();
 
-        return ShiftDTO.fromEntity(shiftRepository.save(shift));
+        Shift saved = shiftRepository.save(shift);
+        auditService.logCreate("Shift", saved.getId().toString(), hospitalId, null);
+        return ShiftDTO.fromEntity(saved);
     }
 
     public ShiftDTO update(UUID hospitalId, UUID id, ShiftDTO dto) {
@@ -76,6 +80,8 @@ public class ShiftService {
         if (dto.status() != null) shift.setStatus(dto.status());
         if (dto.notes() != null) shift.setNotes(dto.notes());
 
-        return ShiftDTO.fromEntity(shiftRepository.save(shift));
+        Shift saved = shiftRepository.save(shift);
+        auditService.log("UPDATE", "Shift", id.toString(), hospitalId, null, null);
+        return ShiftDTO.fromEntity(saved);
     }
 }

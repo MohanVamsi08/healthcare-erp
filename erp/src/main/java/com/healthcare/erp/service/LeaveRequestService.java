@@ -4,6 +4,7 @@ import com.healthcare.erp.dto.LeaveRequestDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class LeaveRequestService {
     private final StaffRepository staffRepository;
     private final HospitalRepository hospitalRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public List<LeaveRequestDTO> getByHospitalId(UUID hospitalId) {
         if (!hospitalRepository.existsById(hospitalId)) {
@@ -57,7 +59,9 @@ public class LeaveRequestService {
                 .reason(dto.reason())
                 .build();
 
-        return LeaveRequestDTO.fromEntity(leaveRequestRepository.save(lr));
+        LeaveRequest saved = leaveRequestRepository.save(lr);
+        auditService.logCreate("LeaveRequest", saved.getId().toString(), hospitalId, null);
+        return LeaveRequestDTO.fromEntity(saved);
     }
 
     public LeaveRequestDTO approve(UUID hospitalId, UUID id, UUID approvedByUserId) {
@@ -78,7 +82,10 @@ public class LeaveRequestService {
         lr.setApprovedBy(approver);
         lr.setUpdatedAt(LocalDateTime.now());
 
-        return LeaveRequestDTO.fromEntity(leaveRequestRepository.save(lr));
+        LeaveRequest saved = leaveRequestRepository.save(lr);
+        auditService.log("STATUS_CHANGE", "LeaveRequest", id.toString(), hospitalId, null,
+                "PENDING -> APPROVED by " + approvedByUserId);
+        return LeaveRequestDTO.fromEntity(saved);
     }
 
     public LeaveRequestDTO reject(UUID hospitalId, UUID id) {
@@ -95,6 +102,9 @@ public class LeaveRequestService {
         lr.setStatus(LeaveStatus.REJECTED);
         lr.setUpdatedAt(LocalDateTime.now());
 
-        return LeaveRequestDTO.fromEntity(leaveRequestRepository.save(lr));
+        LeaveRequest saved = leaveRequestRepository.save(lr);
+        auditService.log("STATUS_CHANGE", "LeaveRequest", id.toString(), hospitalId, null,
+                "PENDING -> REJECTED");
+        return LeaveRequestDTO.fromEntity(saved);
     }
 }

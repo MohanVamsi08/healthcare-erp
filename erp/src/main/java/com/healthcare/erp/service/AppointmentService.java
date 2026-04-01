@@ -4,6 +4,7 @@ import com.healthcare.erp.dto.AppointmentDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class AppointmentService {
     private final HospitalRepository hospitalRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final AuditService auditService;
 
     public AppointmentDTO create(UUID hospitalId, AppointmentDTO dto) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
@@ -45,7 +47,9 @@ public class AppointmentService {
                 .notes(dto.notes())
                 .build();
 
-        return AppointmentDTO.fromEntity(appointmentRepository.save(appointment));
+        Appointment saved = appointmentRepository.save(appointment);
+        auditService.logCreate("Appointment", saved.getId().toString(), hospitalId, null);
+        return AppointmentDTO.fromEntity(saved);
     }
 
     @Transactional(readOnly = true)
@@ -79,7 +83,9 @@ public class AppointmentService {
         if (dto.notes() != null) appt.setNotes(dto.notes());
         appt.setUpdatedAt(java.time.LocalDateTime.now());
 
-        return AppointmentDTO.fromEntity(appointmentRepository.save(appt));
+        Appointment saved = appointmentRepository.save(appt);
+        auditService.log("UPDATE", "Appointment", appointmentId.toString(), hospitalId, null, null);
+        return AppointmentDTO.fromEntity(saved);
     }
 
     public AppointmentDTO updateStatus(UUID hospitalId, UUID appointmentId, AppointmentStatus status) {
@@ -89,9 +95,12 @@ public class AppointmentService {
             throw new ResourceNotFoundException("Appointment", appointmentId);
         }
 
+        String previousStatus = appt.getStatus().name();
         appt.setStatus(status);
         appt.setUpdatedAt(java.time.LocalDateTime.now());
-
-        return AppointmentDTO.fromEntity(appointmentRepository.save(appt));
+        Appointment saved = appointmentRepository.save(appt);
+        auditService.log("STATUS_CHANGE", "Appointment", appointmentId.toString(), hospitalId, null,
+                previousStatus + " -> " + status.name());
+        return AppointmentDTO.fromEntity(saved);
     }
 }

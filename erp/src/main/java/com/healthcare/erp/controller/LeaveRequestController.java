@@ -3,11 +3,11 @@ package com.healthcare.erp.controller;
 import com.healthcare.erp.dto.LeaveRequestDTO;
 import com.healthcare.erp.service.LeaveRequestService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import jakarta.validation.Valid;import org.springframework.security.core.userdetails.UserDetails;
+import jakarta.validation.Valid;import org.springframework.web.bind.annotation.*;
 import com.healthcare.erp.repository.UserRepository;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public class LeaveRequestController {
     @PostMapping
     @PreAuthorize("isAuthenticated() and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<LeaveRequestDTO> create(@PathVariable UUID hospitalId,
-                                                   @RequestBody LeaveRequestDTO dto) {
+                                                   @Valid @RequestBody LeaveRequestDTO dto) {
         return ResponseEntity.ok(leaveRequestService.create(hospitalId, dto));
     }
 

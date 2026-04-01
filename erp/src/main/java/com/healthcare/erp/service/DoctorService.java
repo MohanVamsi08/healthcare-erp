@@ -4,6 +4,7 @@ import com.healthcare.erp.dto.DoctorDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class DoctorService {
     private final HospitalRepository hospitalRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public DoctorDTO create(UUID hospitalId, DoctorDTO dto) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
@@ -57,7 +59,9 @@ public class DoctorService {
             doctor.setUser(user);
         }
 
-        return DoctorDTO.fromEntity(doctorRepository.save(doctor));
+        Doctor saved = doctorRepository.save(doctor);
+        auditService.logCreate("Doctor", saved.getId().toString(), hospitalId, null);
+        return DoctorDTO.fromEntity(saved);
     }
 
     @Transactional(readOnly = true)
@@ -101,7 +105,9 @@ public class DoctorService {
             doctor.setDepartment(dept);
         }
 
-        return DoctorDTO.fromEntity(doctorRepository.save(doctor));
+        Doctor saved = doctorRepository.save(doctor);
+        auditService.log("UPDATE", "Doctor", doctorId.toString(), hospitalId, null, null);
+        return DoctorDTO.fromEntity(saved);
     }
 
     public void deactivate(UUID hospitalId, UUID doctorId) {
@@ -112,5 +118,6 @@ public class DoctorService {
         }
         doctor.setActive(false);
         doctorRepository.save(doctor);
+        auditService.log("DEACTIVATE", "Doctor", doctorId.toString(), hospitalId, null, null);
     }
 }

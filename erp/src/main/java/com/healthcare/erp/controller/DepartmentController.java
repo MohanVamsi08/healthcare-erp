@@ -3,10 +3,10 @@ package com.healthcare.erp.controller;
 import com.healthcare.erp.dto.DepartmentDTO;
 import com.healthcare.erp.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +34,7 @@ public class DepartmentController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
     public ResponseEntity<DepartmentDTO> createDepartment(
             @PathVariable UUID hospitalId,
-            @RequestBody DepartmentDTO dto) {
+            @Valid @RequestBody DepartmentDTO dto) {
         DepartmentDTO created = departmentService.create(hospitalId, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -44,7 +44,7 @@ public class DepartmentController {
     public ResponseEntity<DepartmentDTO> updateDepartment(
             @PathVariable UUID hospitalId,
             @PathVariable UUID id,
-            @RequestBody DepartmentDTO dto) {
+            @Valid @RequestBody DepartmentDTO dto) {
         return ResponseEntity.ok(departmentService.update(hospitalId, id, dto));
     }
 

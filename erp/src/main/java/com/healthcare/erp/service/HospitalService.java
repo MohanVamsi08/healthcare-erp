@@ -4,6 +4,7 @@ import com.healthcare.erp.dto.HospitalDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.Hospital;
 import com.healthcare.erp.repository.HospitalRepository;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class HospitalService {
 
     private final HospitalRepository hospitalRepository;
+    private final AuditService auditService;
 
     public List<HospitalDTO> getAllHospitals() {
         return hospitalRepository.findAll()
@@ -34,6 +36,7 @@ public class HospitalService {
     public HospitalDTO create(HospitalDTO dto) {
         Hospital hospital = dto.toEntity();
         Hospital saved = hospitalRepository.save(hospital);
+        auditService.logCreate("Hospital", saved.getId().toString(), saved.getId(), null);
         return HospitalDTO.fromEntity(saved);
     }
 
@@ -48,6 +51,7 @@ public class HospitalService {
         hospital.setActive(dto.isActive());
 
         Hospital updated = hospitalRepository.save(hospital);
+        auditService.log("UPDATE", "Hospital", id.toString(), id, null, null);
         return HospitalDTO.fromEntity(updated);
     }
 
@@ -56,5 +60,6 @@ public class HospitalService {
             throw new ResourceNotFoundException("Hospital", id);
         }
         hospitalRepository.deleteById(id);
+        auditService.logDelete("Hospital", id.toString(), id, null);
     }
 }

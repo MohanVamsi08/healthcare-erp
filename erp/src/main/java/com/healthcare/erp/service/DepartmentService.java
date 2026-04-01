@@ -6,6 +6,7 @@ import com.healthcare.erp.model.Department;
 import com.healthcare.erp.model.Hospital;
 import com.healthcare.erp.repository.DepartmentRepository;
 import com.healthcare.erp.repository.HospitalRepository;
+import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class DepartmentService {
 
     private final DepartmentRepository departmentRepository;
     private final HospitalRepository hospitalRepository;
+    private final AuditService auditService;
 
     public List<DepartmentDTO> getByHospitalId(UUID hospitalId) {
         if (!hospitalRepository.existsById(hospitalId)) {
@@ -52,6 +54,7 @@ public class DepartmentService {
                 .build();
 
         Department saved = departmentRepository.save(department);
+        auditService.logCreate("Department", saved.getId().toString(), hospitalId, null);
         return DepartmentDTO.fromEntity(saved);
     }
 
@@ -67,6 +70,7 @@ public class DepartmentService {
         department.setActive(dto.isActive());
 
         Department updated = departmentRepository.save(department);
+        auditService.log("UPDATE", "Department", id.toString(), hospitalId, null, null);
         return DepartmentDTO.fromEntity(updated);
     }
 
@@ -77,5 +81,6 @@ public class DepartmentService {
             throw new ResourceNotFoundException("Department", id);
         }
         departmentRepository.deleteById(id);
+        auditService.logDelete("Department", id.toString(), hospitalId, null);
     }
 }
