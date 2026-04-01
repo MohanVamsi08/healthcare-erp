@@ -28,6 +28,10 @@ public class PatientConsent {
     @JoinColumn(name = "hospital_id", nullable = false)
     private Hospital hospital;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_hospital_id", nullable = false)
+    private Hospital targetHospital;
+
     @Convert(converter = FieldEncryptor.class)
     @Column(name = "consent_document", columnDefinition = "TEXT")
     private String consentDocument;

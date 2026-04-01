@@ -77,12 +77,13 @@ public class RecordTransferService {
             throw new IllegalArgumentException("Patient does not belong to this hospital");
         }
 
-        // P1 Fix: Require patient consent before cross-hospital sharing
+        // Require destination-specific patient consent before cross-hospital sharing
         boolean hasConsent = consentRepository
-                .existsByPatientIdAndHospitalIdAndConsentGivenTrue(dto.patientId(), hospitalId);
+                .existsByPatientIdAndHospitalIdAndTargetHospitalIdAndConsentGivenTrue(
+                        dto.patientId(), hospitalId, dto.toHospitalId());
         if (!hasConsent) {
             throw new IllegalArgumentException(
-                    "Patient has not given consent for cross-hospital record sharing");
+                    "Patient has not given consent for record sharing with the destination hospital");
         }
 
         RecordTransferRequest r = RecordTransferRequest.builder()

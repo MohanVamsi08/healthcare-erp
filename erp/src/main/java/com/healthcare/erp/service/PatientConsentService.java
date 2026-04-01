@@ -56,7 +56,14 @@ public class PatientConsentService {
             throw new IllegalArgumentException("Patient does not belong to this hospital");
         }
 
-        // P1 Fix: consent must be meaningful — document required, and consent must be affirmative
+        // Validate target hospital
+        Hospital targetHospital = hospitalRepository.findById(dto.targetHospitalId())
+                .orElseThrow(() -> new ResourceNotFoundException("Hospital", dto.targetHospitalId()));
+        if (dto.targetHospitalId().equals(hospitalId)) {
+            throw new IllegalArgumentException("Target hospital must be different from the source hospital");
+        }
+
+        // Consent must be meaningful — document required, and consent must be affirmative
         if (!dto.consentGiven()) {
             throw new IllegalArgumentException("Consent must be given (consentGiven=true) to create a consent record");
         }
@@ -67,12 +74,14 @@ public class PatientConsentService {
         PatientConsent p = PatientConsent.builder()
                 .patient(patient)
                 .hospital(hospital)
+                .targetHospital(targetHospital)
                 .consentDocument(dto.consentDocument())
                 .consentGiven(true)
                 .build();
 
         PatientConsent saved = consentRepository.save(p);
-        auditService.logCreate("PatientConsent", saved.getId().toString(), hospitalId, null);
+        auditService.logCreate("PatientConsent", saved.getId().toString(), hospitalId,
+                "target=" + dto.targetHospitalId());
         return PatientConsentDTO.fromEntity(saved);
     }
 

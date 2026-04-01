@@ -6,14 +6,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Consent DTO with validation — consentDocument is required when consentGiven is true.
- * Document is only returned in full to HOSPITAL_ADMIN; others see [REDACTED].
+ * Consent DTO — consent is per-destination-hospital.
+ * consentDocument is only returned in full to HOSPITAL_ADMIN; others see [REDACTED].
  */
 public record PatientConsentDTO(
         UUID id,
         @NotNull(message = "Patient ID is required")
         UUID patientId,
         UUID hospitalId,
+        @NotNull(message = "Target hospital ID is required")
+        UUID targetHospitalId,
         @NotBlank(message = "Consent document text is required")
         String consentDocument,
         boolean consentGiven,
@@ -24,6 +26,7 @@ public record PatientConsentDTO(
                 p.getId(),
                 p.getPatient().getId(),
                 p.getHospital().getId(),
+                p.getTargetHospital().getId(),
                 p.getConsentDocument(),
                 p.isConsentGiven(),
                 p.getCreatedAt()
@@ -35,6 +38,7 @@ public record PatientConsentDTO(
                 p.getId(),
                 p.getPatient().getId(),
                 p.getHospital().getId(),
+                p.getTargetHospital().getId(),
                 "[REDACTED]",
                 p.isConsentGiven(),
                 p.getCreatedAt()
