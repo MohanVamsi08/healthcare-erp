@@ -1,12 +1,13 @@
 package com.healthcare.erp.controller;
 
+import jakarta.validation.Valid;
 import com.healthcare.erp.dto.DepartmentDTO;
 import com.healthcare.erp.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
-import jakarta.validation.Valid;import org.springframework.http.HttpStatus;
-import jakarta.validation.Valid;import org.springframework.http.ResponseEntity;
-import jakarta.validation.Valid;import org.springframework.security.access.prepost.PreAuthorize;
-import jakarta.validation.Valid;import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
