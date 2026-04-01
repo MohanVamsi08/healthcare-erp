@@ -13,4 +13,5 @@ public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
     List<Doctor> findByDepartmentId(UUID departmentId);
     boolean existsByLicenseNumber(String licenseNumber);
     java.util.Optional<Doctor> findByUserId(UUID userId);
+    long countByHospitalIdAndIsActiveTrue(UUID hospitalId);
 }

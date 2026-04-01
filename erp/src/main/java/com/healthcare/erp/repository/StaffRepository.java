@@ -11,4 +11,5 @@ public interface StaffRepository extends JpaRepository<Staff, UUID> {
     List<Staff> findByHospitalIdAndIsActiveTrue(UUID hospitalId);
     List<Staff> findByHospitalIdAndDepartmentId(UUID hospitalId, UUID departmentId);
     boolean existsByEmployeeIdAndHospitalId(String employeeId, UUID hospitalId);
+    long countByHospitalIdAndIsActiveTrue(UUID hospitalId);
 }

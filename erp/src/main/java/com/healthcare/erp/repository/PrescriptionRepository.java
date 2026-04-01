@@ -10,4 +10,6 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, UUID
     List<Prescription> findByHospitalId(UUID hospitalId);
     List<Prescription> findByHospitalIdAndStatus(UUID hospitalId, PrescriptionStatus status);
     List<Prescription> findByPatientIdAndHospitalId(UUID patientId, UUID hospitalId);
+    long countByHospitalId(UUID hospitalId);
+    long countByDoctorIdAndHospitalId(UUID doctorId, UUID hospitalId);
 }
