@@ -56,11 +56,19 @@ public class PatientConsentService {
             throw new IllegalArgumentException("Patient does not belong to this hospital");
         }
 
+        // P1 Fix: consent must be meaningful — document required, and consent must be affirmative
+        if (!dto.consentGiven()) {
+            throw new IllegalArgumentException("Consent must be given (consentGiven=true) to create a consent record");
+        }
+        if (dto.consentDocument() == null || dto.consentDocument().isBlank()) {
+            throw new IllegalArgumentException("Consent document text is required when granting consent");
+        }
+
         PatientConsent p = PatientConsent.builder()
                 .patient(patient)
                 .hospital(hospital)
                 .consentDocument(dto.consentDocument())
-                .consentGiven(dto.consentGiven())
+                .consentGiven(true)
                 .build();
 
         PatientConsent saved = consentRepository.save(p);

@@ -35,6 +35,7 @@ public class PatientConsent {
     @Column(name = "consent_given")
     private boolean consentGiven;
 
+    @Builder.Default
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

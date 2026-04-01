@@ -37,9 +37,11 @@ public class RecordTransferRequest {
     @Column(columnDefinition = "TEXT")
     private String reason;
 
+    @Builder.Default
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Builder.Default
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 }
