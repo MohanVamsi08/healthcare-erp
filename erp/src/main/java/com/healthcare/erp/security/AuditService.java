@@ -16,9 +16,13 @@ public class AuditService {
 
     private final AuditLogRepository auditLogRepository;
 
-    @Async
+    /**
+     * Captures the caller's identity from the SecurityContext on the calling thread,
+     * then delegates the actual DB write to an async method so identity is never lost.
+     */
     public void log(String action, String entityType, String entityId,
                     UUID hospitalId, String ipAddress, String details) {
+        // Capture identity on the CALLING thread (where SecurityContext is valid)
         String email = "anonymous";
         String role = "NONE";
 
@@ -31,12 +35,20 @@ public class AuditService {
                     .orElse("UNKNOWN");
         }
 
+        // Pass captured identity to async writer
+        writeAuditLog(action, entityType, entityId, hospitalId, ipAddress, details, email, role);
+    }
+
+    @Async
+    protected void writeAuditLog(String action, String entityType, String entityId,
+                                 UUID hospitalId, String ipAddress, String details,
+                                 String userEmail, String userRole) {
         AuditLog log = AuditLog.builder()
                 .action(action)
                 .entityType(entityType)
                 .entityId(entityId)
-                .userEmail(email)
-                .userRole(role)
+                .userEmail(userEmail)
+                .userRole(userRole)
                 .hospitalId(hospitalId)
                 .ipAddress(ipAddress)
                 .details(details)

@@ -45,9 +45,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        // Log internally for debugging but never expose raw exception messages to clients
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(500, "An unexpected error occurred: " + ex.getMessage()));
+                .body(ErrorResponse.of(500, "An internal error occurred. Please contact support."));
     }
 }
 

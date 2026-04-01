@@ -1,6 +1,7 @@
 package com.healthcare.erp.controller;
 
 import com.healthcare.erp.dto.CreateUserRequest;
+import com.healthcare.erp.dto.UpdateUserRequest;
 import com.healthcare.erp.dto.UserDTO;
 import com.healthcare.erp.service.UserService;
 import jakarta.validation.Valid;
@@ -69,7 +70,7 @@ public class UserController {
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable UUID hospitalId,
             @PathVariable UUID userId,
-            @Valid @RequestBody CreateUserRequest request) {
+            @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(userService.updateUser(hospitalId, userId, request));
     }
 

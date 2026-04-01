@@ -1,6 +1,7 @@
 package com.healthcare.erp.service;
 
 import com.healthcare.erp.dto.CreateUserRequest;
+import com.healthcare.erp.dto.UpdateUserRequest;
 import com.healthcare.erp.dto.UserDTO;
 import com.healthcare.erp.exception.ResourceNotFoundException;
 import com.healthcare.erp.model.Hospital;
@@ -98,12 +99,17 @@ public class UserService {
         return UserDTO.fromEntity(user);
     }
 
-    public UserDTO updateUser(UUID hospitalId, UUID userId, CreateUserRequest request) {
+    public UserDTO updateUser(UUID hospitalId, UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         if (!user.getHospital().getId().equals(hospitalId)) {
             throw new ResourceNotFoundException("User", userId);
+        }
+
+        // Check email uniqueness if changing email
+        if (!user.getEmail().equals(request.email())) {
+            validateEmailNotTaken(request.email());
         }
 
         user.setFirstName(request.firstName());
