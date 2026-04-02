@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface AttendanceRepository extends JpaRepository<Attendance, UUID> {
     List<Attendance> findByHospitalIdAndDate(UUID hospitalId, LocalDate date);
     List<Attendance> findByStaffIdAndDateBetween(UUID staffId, LocalDate start, LocalDate end);
+    List<Attendance> findByStaffIdAndHospitalIdAndDateBetween(UUID staffId, UUID hospitalId, LocalDate start, LocalDate end);
     Optional<Attendance> findByStaffIdAndDate(UUID staffId, LocalDate date);
     boolean existsByStaffIdAndDate(UUID staffId, LocalDate date);
 }

@@ -33,8 +33,13 @@ public class PayrollService {
 
     @Transactional(readOnly = true)
     public List<PayrollDTO> getByStaff(UUID hospitalId, UUID staffId, int year) {
+        // Tenant check: ensure staff belongs to this hospital
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Staff", staffId));
+        if (!staff.getHospital().getId().equals(hospitalId))
+            throw new ResourceNotFoundException("Staff", staffId);
         auditService.logRead("Payroll", "LIST:staff=" + staffId, hospitalId, null);
-        return payrollRepository.findByStaffIdAndYear(staffId, year).stream()
+        return payrollRepository.findByStaffIdAndHospitalIdAndYear(staffId, hospitalId, year).stream()
                 .map(PayrollDTO::fromEntity).toList();
     }
 

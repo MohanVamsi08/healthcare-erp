@@ -15,4 +15,5 @@ public interface BedRepository extends JpaRepository<Bed, UUID> {
     long countByWardIdAndStatus(UUID wardId, BedStatus status);
     long countByHospitalIdAndStatus(UUID hospitalId, BedStatus status);
     boolean existsByBedNumberAndWardId(String bedNumber, UUID wardId);
+    boolean existsByPatientIdAndStatus(UUID patientId, BedStatus status);
 }

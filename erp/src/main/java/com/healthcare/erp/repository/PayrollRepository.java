@@ -13,5 +13,6 @@ public interface PayrollRepository extends JpaRepository<Payroll, UUID> {
     List<Payroll> findByHospitalIdAndMonthAndYear(UUID hospitalId, int month, int year);
     List<Payroll> findByHospitalIdAndStatus(UUID hospitalId, PayrollStatus status);
     List<Payroll> findByStaffIdAndYear(UUID staffId, int year);
+    List<Payroll> findByStaffIdAndHospitalIdAndYear(UUID staffId, UUID hospitalId, int year);
     boolean existsByStaffIdAndMonthAndYear(UUID staffId, int month, int year);
 }

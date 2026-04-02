@@ -5,12 +5,14 @@ import com.healthcare.erp.model.InvoiceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findByHospitalId(UUID hospitalId);
     List<Invoice> findByPatientIdAndHospitalId(UUID patientId, UUID hospitalId);
@@ -24,7 +26,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     @Query("SELECT COALESCE(SUM(i.gstAmount), 0) FROM Invoice i WHERE i.hospital.id = :hospitalId")
     BigDecimal sumGstAmountByHospitalId(@Param("hospitalId") UUID hospitalId);
 
-    @Query("SELECT COALESCE(SUM(i.paidAmount), 0) FROM Invoice i WHERE i.hospital.id = :hospitalId")
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.hospital.id = :hospitalId")
     BigDecimal sumPaidAmountByHospitalId(@Param("hospitalId") UUID hospitalId);
 
     @Query(value = "SELECT MAX(CAST(SUBSTRING(invoice_number, 5) AS INTEGER)) FROM invoices WHERE hospital_id = ?1",

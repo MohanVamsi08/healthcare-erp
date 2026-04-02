@@ -6,6 +6,7 @@ import com.healthcare.erp.model.*;
 import com.healthcare.erp.repository.*;
 import com.healthcare.erp.security.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final StaffRepository staffRepository;
     private final HospitalRepository hospitalRepository;
+    private final UserRepository userRepository;
     private final AuditService auditService;
 
     @Transactional(readOnly = true)
@@ -38,8 +40,10 @@ public class AttendanceService {
 
     @Transactional(readOnly = true)
     public List<AttendanceDTO> getByStaff(UUID hospitalId, UUID staffId, LocalDate start, LocalDate end) {
+        // Tenant check: ensure staff belongs to this hospital
+        getStaffWithCheck(hospitalId, staffId);
         auditService.logRead("Attendance", "LIST:staff=" + staffId, hospitalId, null);
-        return attendanceRepository.findByStaffIdAndDateBetween(staffId, start, end).stream()
+        return attendanceRepository.findByStaffIdAndHospitalIdAndDateBetween(staffId, hospitalId, start, end).stream()
                 .map(AttendanceDTO::fromEntity).toList();
     }
 
@@ -48,6 +52,7 @@ public class AttendanceService {
      */
     public AttendanceDTO clockIn(UUID hospitalId, UUID staffId) {
         Staff staff = getStaffWithCheck(hospitalId, staffId);
+        enforceOrSelfOnly(hospitalId, staffId);
         LocalDate today = LocalDate.now();
 
         if (attendanceRepository.existsByStaffIdAndDate(staffId, today))
@@ -74,6 +79,8 @@ public class AttendanceService {
      * Record clock-out and compute hours worked.
      */
     public AttendanceDTO clockOut(UUID hospitalId, UUID staffId) {
+        getStaffWithCheck(hospitalId, staffId);
+        enforceOrSelfOnly(hospitalId, staffId);
         LocalDate today = LocalDate.now();
         Attendance attendance = attendanceRepository.findByStaffIdAndDate(staffId, today)
                 .orElseThrow(() -> new IllegalArgumentException("No clock-in found for today"));
@@ -126,5 +133,27 @@ public class AttendanceService {
         if (!staff.getHospital().getId().equals(hospitalId))
             throw new ResourceNotFoundException("Staff", staffId);
         return staff;
+    }
+
+    /**
+     * For non-admin roles (NURSE, RECEPTIONIST), enforce that the authenticated user
+     * can only clock in/out for themselves.
+     */
+    private void enforceOrSelfOnly(UUID hospitalId, UUID staffId) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return;
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN")
+                        || a.getAuthority().equals("ROLE_HOSPITAL_ADMIN"));
+        if (isAdmin) return;
+
+        // Non-admin: the authenticated user's linked staff record must match
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
+        Staff linkedStaff = staffRepository.findByUserId(user.getId()).orElse(null);
+        if (linkedStaff == null || !linkedStaff.getId().equals(staffId)) {
+            throw new IllegalArgumentException("You can only clock in/out for yourself");
+        }
     }
 }

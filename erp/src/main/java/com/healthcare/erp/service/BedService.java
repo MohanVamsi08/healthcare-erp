@@ -75,6 +75,10 @@ public class BedService {
         if (!patient.getHospital().getId().equals(hospitalId))
             throw new IllegalArgumentException("Patient does not belong to this hospital");
 
+        // P2 fix: prevent same patient from being assigned to multiple beds
+        if (bedRepository.existsByPatientIdAndStatus(patientId, BedStatus.OCCUPIED))
+            throw new IllegalArgumentException("Patient is already assigned to another bed");
+
         bed.setPatient(patient);
         bed.setStatus(BedStatus.OCCUPIED);
         bed.setAssignedAt(LocalDateTime.now());

@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -23,6 +25,7 @@ public class LabOrderService {
     private final HospitalRepository hospitalRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final UserRepository userRepository;
     private final AuditService auditService;
 
     @Transactional(readOnly = true)
@@ -56,8 +59,10 @@ public class LabOrderService {
         if (!patient.getHospital().getId().equals(hospitalId))
             throw new IllegalArgumentException("Patient does not belong to this hospital");
 
-        Doctor doctor = doctorRepository.findById(dto.doctorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor", dto.doctorId()));
+        // Resolve doctor: if caller is a DOCTOR, force their own identity
+        UUID resolvedDoctorId = resolveDoctor(hospitalId, dto.doctorId());
+        Doctor doctor = doctorRepository.findById(resolvedDoctorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor", resolvedDoctorId));
         if (!doctor.getHospital().getId().equals(hospitalId))
             throw new IllegalArgumentException("Doctor does not belong to this hospital");
 
@@ -133,5 +138,26 @@ public class LabOrderService {
         if (!order.getHospital().getId().equals(hospitalId))
             throw new ResourceNotFoundException("LabOrder", orderId);
         return order;
+    }
+
+    /**
+     * If the authenticated user is a DOCTOR, force their own doctor ID.
+     * Admins can specify any doctor within the hospital.
+     */
+    private UUID resolveDoctor(UUID hospitalId, UUID requestedDoctorId) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return requestedDoctorId;
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN")
+                        || a.getAuthority().equals("ROLE_HOSPITAL_ADMIN"));
+        if (isAdmin) return requestedDoctorId;
+
+        // For DOCTOR role: resolve from authenticated user
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
+        Doctor doctor = doctorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user is not linked to a doctor profile"));
+        return doctor.getId();
     }
 }
