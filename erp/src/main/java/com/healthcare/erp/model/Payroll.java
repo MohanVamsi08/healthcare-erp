@@ -25,10 +25,10 @@ public class Payroll {
     @JoinColumn(name = "hospital_id", nullable = false)
     private Hospital hospital;
 
-    @Column(nullable = false)
+    @Column(name = "pay_month", nullable = false)
     private int month;
 
-    @Column(nullable = false)
+    @Column(name = "pay_year", nullable = false)
     private int year;
 
     @Column(nullable = false, precision = 12, scale = 2)
