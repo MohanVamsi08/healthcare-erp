@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payroll", uniqueConstraints = @UniqueConstraint(columnNames = {"staff_id", "month", "year"}))
+@Table(name = "payroll", uniqueConstraints = @UniqueConstraint(columnNames = {"staff_id", "pay_month", "pay_year"}))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Payroll {
 
