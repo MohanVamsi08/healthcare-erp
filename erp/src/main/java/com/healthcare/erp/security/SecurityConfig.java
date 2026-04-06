@@ -43,6 +43,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/", "/api/auth/login").permitAll()
+                        // Swagger/OpenAPI
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
+                                "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+                        // Actuator health
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // SUPER_ADMIN only
                         .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
                         // Everything else requires authentication
