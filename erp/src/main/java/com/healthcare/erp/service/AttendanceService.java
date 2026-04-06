@@ -23,6 +23,9 @@ import java.util.UUID;
 @Transactional
 public class AttendanceService {
 
+    @org.springframework.beans.factory.annotation.Value("${attendance.half-day-threshold-hours:4}")
+    private int halfDayThresholdHours;
+
     private final AttendanceRepository attendanceRepository;
     private final StaffRepository staffRepository;
     private final HospitalRepository hospitalRepository;
@@ -97,7 +100,7 @@ public class AttendanceService {
             attendance.setHoursWorked(hours);
 
             // Auto-set HALF_DAY if less than 4 hours
-            if (hours.compareTo(BigDecimal.valueOf(4)) < 0) {
+            if (hours.compareTo(BigDecimal.valueOf(halfDayThresholdHours)) < 0) {
                 attendance.setStatus(AttendanceStatus.HALF_DAY);
             }
         }

@@ -19,6 +19,9 @@ import java.util.UUID;
 @Transactional
 public class InvoiceService {
 
+    @org.springframework.beans.factory.annotation.Value("${invoice.default-gst-rate:18.00}")
+    private String defaultGstRate;
+
     private final InvoiceRepository invoiceRepository;
     private final HospitalRepository hospitalRepository;
     private final PatientRepository patientRepository;
@@ -64,7 +67,7 @@ public class InvoiceService {
         if (subtotal == null || subtotal.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Subtotal must be greater than zero");
         }
-        BigDecimal gstRate = dto.gstRate() != null ? dto.gstRate() : new BigDecimal("18.00");
+        BigDecimal gstRate = dto.gstRate() != null ? dto.gstRate() : new BigDecimal(defaultGstRate);
         if (gstRate.compareTo(BigDecimal.ZERO) < 0 || gstRate.compareTo(new BigDecimal("100.00")) > 0) {
             throw new IllegalArgumentException("GST rate must be between 0 and 100");
         }

@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ReportService {
 
+    @org.springframework.beans.factory.annotation.Value("${inventory.low-stock-threshold:10}")
+    private int lowStockThreshold;
+
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final StaffRepository staffRepository;
@@ -51,7 +54,7 @@ public class ReportService {
         BigDecimal totalPaid = invoiceRepository.sumPaidAmountByHospitalId(hospitalId);
         BigDecimal outstanding = totalRevenue.subtract(totalPaid);
 
-        long lowStock = medicineRepository.findByHospitalIdAndStockQuantityLessThanEqual(hospitalId, 10).size();
+        long lowStock = medicineRepository.findByHospitalIdAndStockQuantityLessThanEqual(hospitalId, lowStockThreshold).size();
         long totalPrescriptions = prescriptionRepository.countByHospitalId(hospitalId);
         long totalInvoices = invoiceRepository.countByHospitalId(hospitalId);
 
