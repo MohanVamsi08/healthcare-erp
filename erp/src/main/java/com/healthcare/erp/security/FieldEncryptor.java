@@ -26,8 +26,13 @@ public class FieldEncryptor implements AttributeConverter<String, String> {
 
     private static String encryptionKey;
 
-    @Value("${encryption.key:healthcare-erp-encryption-key-32b!}")
+    @Value("${encryption.key}")
     public void setEncryptionKey(String key) {
+        if (key == null || key.isBlank() || key.length() < 16) {
+            throw new IllegalStateException(
+                    "ENCRYPTION_KEY must be set and at least 16 characters. " +
+                    "Generate one with: openssl rand -base64 32");
+        }
         FieldEncryptor.encryptionKey = key;
     }
 

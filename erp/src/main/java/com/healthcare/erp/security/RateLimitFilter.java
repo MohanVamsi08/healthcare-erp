@@ -19,8 +19,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    private static final int MAX_ATTEMPTS = 5;
-    private static final long WINDOW_MS = 60_000; // 1 minute
+    @org.springframework.beans.factory.annotation.Value("${rate-limit.max-attempts:5}")
+    private int maxAttempts;
+
+    @org.springframework.beans.factory.annotation.Value("${rate-limit.window-ms:60000}")
+    private long windowMs;
 
     private final Map<String, AttemptInfo> attempts = new ConcurrentHashMap<>();
 
@@ -36,13 +39,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         String ip = getClientIp(request);
         AttemptInfo info = attempts.compute(ip, (key, existing) -> {
-            if (existing == null || System.currentTimeMillis() - existing.windowStart > WINDOW_MS) {
+            if (existing == null || System.currentTimeMillis() - existing.windowStart > windowMs) {
                 return new AttemptInfo();
             }
             return existing;
         });
 
-        if (info.count.incrementAndGet() > MAX_ATTEMPTS) {
+        if (info.count.incrementAndGet() > maxAttempts) {
             response.setStatus(429);
             response.setContentType("application/json");
             response.getWriter().write(
