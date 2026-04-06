@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -33,6 +36,13 @@ public class HospitalSupplyService {
         return supplyRepository.findByHospitalId(hospitalId).stream()
                 .map(HospitalSupplyDTO::fromEntity).toList();
     }
+    public Page<HospitalSupplyDTO> getByHospital(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        return supplyRepository.findByHospitalId(hospitalId, pageable)
+                .map(HospitalSupplyDTO::fromEntity);
+    }
+
 
     public HospitalSupplyDTO getById(UUID hospitalId, UUID id) {
         return HospitalSupplyDTO.fromEntity(getSupplyWithTenantCheck(hospitalId, id));

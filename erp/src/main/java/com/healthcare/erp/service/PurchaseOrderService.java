@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -38,6 +41,13 @@ public class PurchaseOrderService {
         return poRepository.findByHospitalId(hospitalId).stream()
                 .map(PurchaseOrderDTO::fromEntity).toList();
     }
+    public Page<PurchaseOrderDTO> getByHospital(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        return poRepository.findByHospitalId(hospitalId, pageable)
+                .map(PurchaseOrderDTO::fromEntity);
+    }
+
 
     public PurchaseOrderDTO getById(UUID hospitalId, UUID id) {
         return PurchaseOrderDTO.fromEntity(getPOWithTenantCheck(hospitalId, id));

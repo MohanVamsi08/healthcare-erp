@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import com.healthcare.erp.repository.UserRepository;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @RestController
@@ -24,8 +27,8 @@ public class LeaveRequestController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<List<LeaveRequestDTO>> getAll(@PathVariable UUID hospitalId) {
-        return ResponseEntity.ok(leaveRequestService.getByHospitalId(hospitalId));
+    public ResponseEntity<Page<LeaveRequestDTO>> getAll(@PathVariable UUID hospitalId, Pageable pageable) {
+        return ResponseEntity.ok(leaveRequestService.getByHospitalId(hospitalId, pageable));
     }
 
     @GetMapping("/pending")

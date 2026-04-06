@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @RestController
 @RequestMapping("/api/hospitals/{hospitalId}/appointments")
 @RequiredArgsConstructor
@@ -31,8 +34,8 @@ public class AppointmentController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<List<AppointmentDTO>> getAll(@PathVariable UUID hospitalId) {
-        return ResponseEntity.ok(appointmentService.getByHospital(hospitalId));
+    public ResponseEntity<Page<AppointmentDTO>> getAll(@PathVariable UUID hospitalId, Pageable pageable) {
+        return ResponseEntity.ok(appointmentService.getByHospital(hospitalId, pageable));
     }
 
     @GetMapping("/{appointmentId}")

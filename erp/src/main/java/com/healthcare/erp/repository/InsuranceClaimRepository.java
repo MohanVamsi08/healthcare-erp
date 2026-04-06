@@ -8,10 +8,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface InsuranceClaimRepository extends JpaRepository<InsuranceClaim, UUID> {
     List<InsuranceClaim> findByHospitalId(UUID hospitalId);
+    Page<InsuranceClaim> findByHospitalId(UUID hospitalId, Pageable pageable);
     List<InsuranceClaim> findByPatientIdAndHospitalId(UUID patientId, UUID hospitalId);
     List<InsuranceClaim> findByHospitalIdAndStatus(UUID hospitalId, ClaimStatus status);
     long countByHospitalIdAndStatus(UUID hospitalId, ClaimStatus status);

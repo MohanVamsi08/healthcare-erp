@@ -14,6 +14,9 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -35,6 +38,15 @@ public class InvoiceService {
         auditService.logRead("Invoice", "LIST", hospitalId, null);
         return invoiceRepository.findByHospitalId(hospitalId)
                 .stream().map(InvoiceDTO::fromEntity).toList();
+    }
+
+    public Page<InvoiceDTO> getByHospital(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        }
+        auditService.logRead("Invoice", "LIST", hospitalId, null);
+        return invoiceRepository.findByHospitalId(hospitalId, pageable)
+                .map(InvoiceDTO::fromEntity);
     }
 
     public List<InvoiceDTO> getByPatient(UUID hospitalId, UUID patientId) {

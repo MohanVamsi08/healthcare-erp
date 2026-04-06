@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class InsuranceClaimController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<List<InsuranceClaimDTO>> getAll(@PathVariable UUID hospitalId) {
-        return ResponseEntity.ok(claimService.getByHospital(hospitalId));
+    public ResponseEntity<Page<InsuranceClaimDTO>> getAll(@PathVariable UUID hospitalId, Pageable pageable) {
+        return ResponseEntity.ok(claimService.getByHospital(hospitalId, pageable));
     }
 
     @GetMapping("/{claimId}")

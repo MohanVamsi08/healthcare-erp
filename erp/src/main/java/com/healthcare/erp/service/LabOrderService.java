@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +39,14 @@ public class LabOrderService {
         return labOrderRepository.findByHospitalId(hospitalId).stream()
                 .map(LabOrderDTO::fromEntity).toList();
     }
+    public Page<LabOrderDTO> getByHospital(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        auditService.logRead("LabOrder", "LIST", hospitalId, null);
+        return labOrderRepository.findByHospitalId(hospitalId, pageable)
+                .map(LabOrderDTO::fromEntity);
+    }
+
 
     @Transactional(readOnly = true)
     public List<LabOrderDTO> getByPatient(UUID hospitalId, UUID patientId) {

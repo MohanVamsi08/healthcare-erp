@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -32,6 +35,15 @@ public class PatientService {
                 .stream()
                 .map(PatientDTO::fromEntity)
                 .toList();
+    }
+
+    public Page<PatientDTO> getByHospitalId(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        }
+        auditService.logRead("Patient", "LIST", hospitalId, null);
+        return patientRepository.findByHospitalId(hospitalId, pageable)
+                .map(PatientDTO::fromEntity);
     }
 
     public PatientDTO getById(UUID hospitalId, UUID id) {

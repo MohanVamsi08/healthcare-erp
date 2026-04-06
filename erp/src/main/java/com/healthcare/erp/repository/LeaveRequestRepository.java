@@ -7,9 +7,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID> {
     List<LeaveRequest> findByHospitalIdAndStatus(UUID hospitalId, LeaveStatus status);
     List<LeaveRequest> findByStaffIdOrderByCreatedAtDesc(UUID staffId);
     List<LeaveRequest> findByHospitalIdOrderByCreatedAtDesc(UUID hospitalId);
+    Page<LeaveRequest> findByHospitalIdOrderByCreatedAtDesc(UUID hospitalId, Pageable pageable);
 }

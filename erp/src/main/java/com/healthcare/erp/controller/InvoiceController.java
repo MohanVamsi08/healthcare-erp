@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @RestController
 @RequestMapping("/api/hospitals/{hospitalId}/invoices")
 @RequiredArgsConstructor
@@ -21,8 +24,8 @@ public class InvoiceController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'RECEPTIONIST', 'DOCTOR') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<List<InvoiceDTO>> getAll(@PathVariable UUID hospitalId) {
-        return ResponseEntity.ok(invoiceService.getByHospital(hospitalId));
+    public ResponseEntity<Page<InvoiceDTO>> getAll(@PathVariable UUID hospitalId, Pageable pageable) {
+        return ResponseEntity.ok(invoiceService.getByHospital(hospitalId, pageable));
     }
 
     @GetMapping("/patient/{patientId}")

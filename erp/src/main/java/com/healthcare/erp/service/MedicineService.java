@@ -15,6 +15,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -34,6 +37,13 @@ public class MedicineService {
         return medicineRepository.findByHospitalId(hospitalId).stream()
                 .map(MedicineDTO::fromEntity).toList();
     }
+    public Page<MedicineDTO> getByHospital(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        return medicineRepository.findByHospitalId(hospitalId, pageable)
+                .map(MedicineDTO::fromEntity);
+    }
+
 
     public MedicineDTO getById(UUID hospitalId, UUID id) {
         return MedicineDTO.fromEntity(getMedicineWithTenantCheck(hospitalId, id));

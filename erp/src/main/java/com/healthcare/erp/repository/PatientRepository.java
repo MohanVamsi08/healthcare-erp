@@ -9,10 +9,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, UUID> {
 
     List<Patient> findByHospitalId(UUID hospitalId);
+
+    Page<Patient> findByHospitalId(UUID hospitalId, Pageable pageable);
 
     List<Patient> findByHospitalIdAndIsActiveTrue(UUID hospitalId);
 

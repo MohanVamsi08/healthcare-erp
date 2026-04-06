@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -30,6 +33,14 @@ public class LeaveRequestService {
         }
         return leaveRequestRepository.findByHospitalIdOrderByCreatedAtDesc(hospitalId)
                 .stream().map(LeaveRequestDTO::fromEntity).toList();
+    }
+
+    public Page<LeaveRequestDTO> getByHospitalId(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        }
+        return leaveRequestRepository.findByHospitalIdOrderByCreatedAtDesc(hospitalId, pageable)
+                .map(LeaveRequestDTO::fromEntity);
     }
 
     public List<LeaveRequestDTO> getPending(UUID hospitalId) {

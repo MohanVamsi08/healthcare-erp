@@ -12,9 +12,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findByHospitalId(UUID hospitalId);
+    Page<Invoice> findByHospitalId(UUID hospitalId, Pageable pageable);
     List<Invoice> findByPatientIdAndHospitalId(UUID patientId, UUID hospitalId);
     List<Invoice> findByHospitalIdAndStatus(UUID hospitalId, InvoiceStatus status);
     long countByHospitalId(UUID hospitalId);

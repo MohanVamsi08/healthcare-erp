@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -32,6 +35,13 @@ public class DepartmentService {
                 .map(DepartmentDTO::fromEntity)
                 .toList();
     }
+    public Page<DepartmentDTO> getByHospitalId(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        return departmentRepository.findByHospitalId(hospitalId, pageable)
+                .map(DepartmentDTO::fromEntity);
+    }
+
 
     public DepartmentDTO getById(UUID hospitalId, UUID id) {
         Department department = departmentRepository.findById(id)

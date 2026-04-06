@@ -10,6 +10,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @RestController
@@ -21,8 +24,8 @@ public class DepartmentController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<List<DepartmentDTO>> getDepartmentsByHospital(@PathVariable UUID hospitalId) {
-        return ResponseEntity.ok(departmentService.getByHospitalId(hospitalId));
+    public ResponseEntity<Page<DepartmentDTO>> getDepartmentsByHospital(@PathVariable UUID hospitalId, Pageable pageable) {
+        return ResponseEntity.ok(departmentService.getByHospitalId(hospitalId, pageable));
     }
 
     @GetMapping("/{id}")

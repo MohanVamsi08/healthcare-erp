@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -38,6 +41,14 @@ public class PrescriptionService {
         return prescriptionRepository.findByHospitalId(hospitalId).stream()
                 .map(PrescriptionDTO::fromEntity).toList();
     }
+    public Page<PrescriptionDTO> getByHospital(UUID hospitalId, Pageable pageable) {
+        if (!hospitalRepository.existsById(hospitalId))
+            throw new ResourceNotFoundException("Hospital", hospitalId);
+        auditService.logRead("Prescription", "LIST", hospitalId, null);
+        return prescriptionRepository.findByHospitalId(hospitalId, pageable)
+                .map(PrescriptionDTO::fromEntity);
+    }
+
 
     public PrescriptionDTO getById(UUID hospitalId, UUID id) {
         Prescription rx = getRxWithTenantCheck(hospitalId, id);

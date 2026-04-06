@@ -11,9 +11,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
     List<Appointment> findByHospitalId(UUID hospitalId);
+    Page<Appointment> findByHospitalId(UUID hospitalId, Pageable pageable);
     List<Appointment> findByDoctorIdAndAppointmentDateTimeBetween(UUID doctorId, LocalDateTime start, LocalDateTime end);
     List<Appointment> findByPatientId(UUID patientId);
     List<Appointment> findByHospitalIdAndStatus(UUID hospitalId, AppointmentStatus status);

@@ -13,6 +13,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,8 +31,8 @@ public class LabController {
 
     @GetMapping("/tests")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'NURSE') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<List<LabTestDTO>> getTests(@PathVariable UUID hospitalId) {
-        return ResponseEntity.ok(labTestService.getByHospital(hospitalId));
+    public ResponseEntity<Page<LabTestDTO>> getTests(@PathVariable UUID hospitalId, Pageable pageable) {
+        return ResponseEntity.ok(labTestService.getByHospital(hospitalId, pageable));
     }
 
     @GetMapping("/tests/{testId}")
@@ -57,8 +60,8 @@ public class LabController {
 
     @GetMapping("/orders")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR', 'NURSE') and @tenantGuard.canAccessTenant(authentication, #hospitalId)")
-    public ResponseEntity<List<LabOrderDTO>> getOrders(@PathVariable UUID hospitalId) {
-        return ResponseEntity.ok(labOrderService.getByHospital(hospitalId));
+    public ResponseEntity<Page<LabOrderDTO>> getOrders(@PathVariable UUID hospitalId, Pageable pageable) {
+        return ResponseEntity.ok(labOrderService.getByHospital(hospitalId, pageable));
     }
 
     @GetMapping("/orders/{orderId}")
