@@ -57,4 +57,8 @@ public class AuditService {
         log(success ? "LOGIN_SUCCESS" : "LOGIN_FAILED", "AUTH", null, null, ip,
                 success ? null : "Failed login attempt for: " + email);
     }
+
+    public void logExport(String entityType, String format, UUID hospitalId, String ip) {
+        log("EXPORT", entityType, null, hospitalId, ip, "Format: " + format);
+    }
 }

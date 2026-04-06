@@ -31,6 +31,7 @@ import java.util.UUID;
 public class ReportExportService {
 
     private final ReportService reportService;
+    private final com.healthcare.erp.security.AuditService auditService;
 
     // ────────────────────── EXCEL EXPORTS ──────────────────────
 
@@ -70,6 +71,7 @@ public class ReportExportService {
             sheet.autoSizeColumn(1);
 
             wb.write(out);
+            auditService.logExport("DASHBOARD", "EXCEL", hospitalId, null);
             return out.toByteArray();
         }
     }
@@ -126,6 +128,7 @@ public class ReportExportService {
             sheet.autoSizeColumn(1);
 
             wb.write(out);
+            auditService.logExport("REVENUE", "EXCEL", hospitalId, null);
             return out.toByteArray();
         }
     }
@@ -158,6 +161,7 @@ public class ReportExportService {
             for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);
 
             wb.write(out);
+            auditService.logExport("DOCTOR_WORKLOAD", "EXCEL", hospitalId, null);
             return out.toByteArray();
         }
     }
@@ -203,6 +207,7 @@ public class ReportExportService {
 
             doc.add(table);
             doc.close();
+            auditService.logExport("DASHBOARD", "PDF", hospitalId, null);
             return out.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("PDF generation failed", e);
@@ -251,6 +256,7 @@ public class ReportExportService {
             doc.add(invoices);
 
             doc.close();
+            auditService.logExport("REVENUE", "PDF", hospitalId, null);
             return out.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("PDF generation failed", e);
@@ -290,6 +296,7 @@ public class ReportExportService {
 
             doc.add(table);
             doc.close();
+            auditService.logExport("DOCTOR_WORKLOAD", "PDF", hospitalId, null);
             return out.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("PDF generation failed", e);
