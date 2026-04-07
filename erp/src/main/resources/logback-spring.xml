@@ -14,7 +14,8 @@
         </root>
 
         <!-- Quiet noisy libraries in dev -->
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
+        <logger name="org.hibernate" level="WARN"/>
         <logger name="org.springframework.security" level="WARN"/>
     </springProfile>
 
