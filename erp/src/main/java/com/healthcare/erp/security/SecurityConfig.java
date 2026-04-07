@@ -43,11 +43,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/", "/api/auth/login").permitAll()
-                        // Swagger/OpenAPI
+                        // Actuator — only health is public; metrics requires SUPER_ADMIN
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("SUPER_ADMIN")
+                        // Swagger/OpenAPI — requires authentication (no anonymous recon)
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
-                                "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
-                        // Actuator health
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                                "/v3/api-docs/**", "/v3/api-docs.yaml").authenticated()
                         // SUPER_ADMIN only
                         .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
                         // Everything else requires authentication
